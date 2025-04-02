@@ -34,7 +34,6 @@ class C(BaseConstants):
     INSTRUCTIONS_TEMPLATE = "SimilarityRatingExperiment/Instructions.html" 
     IMG_DIM = 400 # could be the dimensions of the shown image
     GRID_DIM = 312 # could be the dimensions of the drawing surface
-    STIM_DB = pd.read_csv("_static/BTL/stims_memorability.csv") # this file links to the stimuli images. 
     DRAWINGS_PR_ROUND = drawings_pr_round
 
 # pass probably = not relevant for this experiment
