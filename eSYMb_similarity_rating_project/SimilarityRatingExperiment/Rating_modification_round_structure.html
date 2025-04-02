@@ -94,7 +94,8 @@ let stimList = {};
 
 function getDataSync(index) {
     let request = new XMLHttpRequest();
-    request.open("GET", "/static/similarity/stim_lists/setListJSON_2.JSON", false); // `false` makes it synchronous
+    // notice that the path to the setListJSON file is here modified from 3 to 2
+    request.open("GET", "/static/similarity/stim_lists/setListJSON_3.JSON", false); // `false` makes it synchronous
     request.send(null); // Send the request
 
     if (request.status === 200) {
@@ -133,7 +134,7 @@ let roundSetSize;
 if (remainingPairs % drawingsPrRound == 0) {
     roundSetSize = drawingsPrRound;
 } else {
-    roundSetSize = remainingPairs;
+    roundSetSize = remainingPairs; // notice that this is directly tied to the size of the stim set
 }
 
 console.log("roundSetSize", roundSetSize);

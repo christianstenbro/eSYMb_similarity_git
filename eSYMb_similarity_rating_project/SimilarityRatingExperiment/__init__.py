@@ -15,12 +15,13 @@ import math
 
 """
 
-# defining parameters (should correspond to the ones in the stimSet gen script)
-ratings_pr_drawing = 7
+# defining parameters 
+# the parameters should correspond to the ones in the stimSet gen script
+ratings_pr_drawing = 3 # modified from 7
 num_participants = 100
-num_total_drawings = 4751
+num_total_drawings = 1000 # modified from 4751
 num_rounds = 3
-num_breaks = 2
+num_breaks = num_rounds - 1
 
 stim_set_size = math.ceil(num_total_drawings * ratings_pr_drawing / num_participants)
 
