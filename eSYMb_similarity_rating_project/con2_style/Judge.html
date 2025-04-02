@@ -1,0 +1,64 @@
+
+{% block title %}
+<span style="display: none;">C2-P{{player.id_in_subsession}}</span>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static 'esymb_transmission/experiment_layout.css' }}" type="text/css">
+{% endblock %}
+
+{% block content %}
+{{ include C.INSTRUCTIONS_TEMPLATE_JUDGE }}
+<div id="wrapper">
+
+  <div id="feedback" class="left">
+	
+	{{ if feedback_table }}
+	<table class="table table-sm">
+	  <thead>
+		<tr>
+		  <th scope="col"></th>
+		  <th scope="col">Drawing from your group</th>
+		  <th scope="col">Drawing from other group</th>
+		  <th scope="col">Guessed correctly?</th>
+		</tr>
+	  </thead>
+	  <tbody>
+		{{ for row in feedback_table }}
+		<tr>
+		  <th scope="row">{{ row.round }}</th>
+		  <td><img src="{{ row.owngroup }}" style="width: {{C.IMG_DIM_SMALL}}px;"></td>
+		  <td><img src="{{ row.othergroup }}" style="width: {{C.IMG_DIM_SMALL}}px;"></td>
+		  <td>{{ row.correct }}</td>
+		</tr>
+		{{ endfor }}
+	  </tbody>
+	</table>
+	{{ endif }}
+  </div>
+
+  <div class="right">
+	{{ formfield_errors 'judge' }}
+	<p>1. Guess:</p>
+	<div id="judge">
+	  {{ for s in judgelist }}
+	  <label style="padding-right: 10px;">
+		<input required type="radio" name="judge" value="{{ s.value }}">
+		<img src="{{ s.image }}" width="{{C.IMG_DIM}}px">
+	  </label>
+	  {{ endfor }}
+	</div>
+	
+	<br />
+	<button class="otree-btn-next btn btn-primary">
+	  2. Send
+	</button>
+  </div>
+
+</div>
+
+
+<br />
+
+
+{% endblock %}

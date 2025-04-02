@@ -1,0 +1,108 @@
+
+{% block title %}
+<span style="display: none;">Experiment: Practice</span>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static 'BTL/experiment_layout.css' }}" type="text/css">
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ static 'BTL/html2canvas.js' }}" type="text/javascript"></script>
+{% endblock %}
+
+{% block content %}
+
+<style>
+	body {
+		background-color: ghostwhite;
+	}
+  </style>
+
+<div class="card instructions panel panel-default">
+	<h4 class="card-header" style="margin-bottom: 10px;">Practice Round</h4>
+<!--<p style = "font-size: 20px; text-align: center; margin-bottom: 20px;">Please follow the instructions below to familiarize yourself with the drawing tool that you will be using throughout the experiment:<p>-->
+
+<div id="wrapper">
+
+  <div id="history" class="left">
+	<section style="grid-column: 1 / span 2; margin: 10px">
+		<p>Please follow the instructions below to familiarize yourself with the drawing tool:</p>
+		<br>
+	  <ol style="grid-column: 1 / span 2;">
+		<li>To draw a line, click inside the drawing area and drag the cursor using your mouse.</li>
+		<br>
+		<li>Notice that the drawing tool allows you to place and orient each line, while keeping the length and thickness fixed.</li>
+		<br>
+		<li> It is not possible to remove or delete lines once drawn on the canvas. So please be careful not to click the drawing area by mistake.</li>
+		<br>
+		<!-- <li>To move a line, click on its center and drag it to the desired position.</li> 
+		<li>To rotate a line, click on one of the ends and drag it to the desired position.</li>
+		<li>To delete a line, double-click on it.</li> -->
+		<li>Note that you cannot place a line outside the drawing area (you can test this now). If a line extents outside the canvas it will automatically be removed, and you can draw a new line.</li>
+		<br>
+		<li>In this practice round, you can draw up to six lines. In the actual experiment, the number of lines you can draw will vary depending on the instruction.</li>
+	  </ol>
+	  <p>When you are comfortable with the drawing tool, click <strong>End Practice</strong> to end the practice round and begin the experiment.</p>
+</section>
+</div>
+
+
+<div id="draw" class="right">
+
+	<section style="grid-column: 1 / span 2; margin: 10px"></section>
+	  <p>Drawing area:</p>
+	  
+	  {{ formfield_errors 'drawing' }}
+
+	  <label>
+		<input required type="hidden" name="drawing" id="drawing">
+		<input required type="hidden" name="linecount" id="linecount">
+		<input type="hidden" name="startPosData" id="startPosData" />
+		<input type="hidden" name="angleData" id="angleData" />
+		  <div id="canvas" class="canvas"></div>
+		</div>
+	  </label>
+
+	  {{ formfield_errors 'linecount' }}
+
+	  {{ formfield_errors 'startPosData' }}
+	  
+	  {{ formfield_errors 'angleData' }}	  
+
+	</div>
+
+  </div>
+
+</div>
+
+<button class="otree-btn-next btn btn-primary" id = "button_end" type="button" onclick="validate_drawing(submit_send)" style="float: right; margin-top: 20px;">
+	End Practice
+  </button>
+
+<script src="{{ static 'BTL/drawing_nomoderation_BTL_practice.js' }}" type="text/javascript"></script>
+
+<script type="text/javascript">
+
+	// mechanism for enabling the button only when the requested number of lines have been drawn
+	
+	const lineCountRefresher = setInterval(function() {
+		
+			if (lineCount >= 1) {
+				document.getElementById("button_end").disabled = false;
+				// console.log("condition met");
+	
+				clearInterval(lineCountRefresher);
+	
+			} else {
+				document.getElementById("button_end").disabled = true;
+				// console.log("condition not met");
+			}
+		}, 100)
+	
+	</script>
+
+<br />
+
+
+{% endblock %}

@@ -1,0 +1,382 @@
+
+
+
+
+.otree-body {
+	max-width: 1400px !important;
+}
+
+/* https://stackoverflow.com/questions/17541614/use-images-instead-of-radio-buttons */
+/* HIDE RADIO */
+[type=radio] { 
+	position: absolute;
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+/* IMAGE STYLES */
+[type=radio] + img {
+	cursor: pointer;
+}
+
+/* CHECKED STYLES */
+[type=radio]:checked + img {
+	outline: 2px solid #f00;
+	opacity: 1 !important;
+    filter: alpha(opacity=100) !important; /* msie */
+	
+}
+
+
+/* [type=radio] + img { */
+/*     filter: alpha(opacity=40); /\* msie *\/ */
+/*     opacity: 0.4; */
+/* } */
+
+.page-header {
+	padding-top: 0px !important;
+}
+
+/* ._otree-content { */
+/* 	position: relative; */
+/* 	top: -60px; */
+/* } */
+
+/* columns of the view */
+#wrapper {
+	display: grid;
+	grid-template-columns: 1.2fr 2fr;
+	grid-gap: 30px;
+	padding-top: 15px;
+	/* grid-template-rows: 1fr 1fr 1fr; */
+	/* justify-items: center; */
+
+}
+
+/* grid of surface picks */
+#wrapper .left {
+	grid-row: 1 / span 3;
+	
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	width: 100%;
+	grid-gap: 2px;
+	margin-top: 0px;
+	align-self: start;
+	/* justify-items: left; */
+
+}
+
+#wrapper .left td {
+	vertical-align: middle;
+	text-align: center;
+}
+#wrapper .left tbody th {
+	vertical-align: middle;
+}
+
+#wrapper .left img {
+	background-size: 155px 155px;
+
+}
+
+/* grid of pattern picks */
+#wrapper .right {
+	grid-row: 1;
+	grid-column: 2;
+	
+	/* display: grid; */
+	/* grid-template-columns: repeat(4, 1fr); */
+	/* grid-gap: 2px; */
+	
+	border-left: dotted;
+	padding-left: 30px;
+}
+
+#wrapper .right #judge {
+	text-align: center;
+}
+
+#wrapper .whole {
+	grid-row: 1 / -1;
+	grid-column: 1 / -1;
+	place-self: center;
+}
+
+.delay {
+	position: absolute;
+	left: 10000px;
+}
+
+#wrapper #pattern{
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	grid-gap: 2px;
+	margin-bottom: 15px;
+}
+
+
+#wrapper #pattern img.checked {
+	outline: 2px solid #f00;
+	opacity: 1 !important;
+}
+
+#wrapper #pattern img.unchecked {
+	opacity: 0.4;
+}
+
+#wrapper #draw {
+	/* grid-row: 2 / span 2; */
+	/* align-margin: 0 auto; */
+	/* clear: left; */
+	/* text-align: center; */
+	/* align-content: end; */
+}
+
+#history .surface {
+	width: 175px;
+	height: 175px;
+	background-size: 175px 175px;
+}
+
+#history .surface img {
+	position:relative;
+	/* left: 37.5px; */
+	top: 25px;
+	background: rgba(255, 255, 255, 0.3);
+}
+
+.left .table {
+	text-align: center;
+}
+
+#wrapper #surface {
+	width: 700px;
+	height: 700px;
+	background-size: 700px 700px;
+	margin-top: -14px;
+}
+
+#wrapper #surface #canvas {
+	left: 148px;
+	top: 102px;
+	background: rgba(255, 255, 255, 0.3);
+}
+
+#draw #canvas {
+    position: relative;
+    flex: 1 1 auto;
+    overflow: hidden;
+	width: 400px;
+	height: 400px;
+    background-size: 400px 400px;
+	outline: dotted;
+
+}
+#draw #canvas .line {
+    position: absolute;
+	height: 25px;
+	min-width: 0px;
+	max-width: 215px;
+    /* width: 13px; */
+    /* min-height: 0px; */
+    /* max-height: 150px; */
+    /* rotate: -90deg; */
+    transform-origin: 0px 0px;
+    background-image: url("/static/BTL/line2.png");
+    background-size: 215px 25px; /* 150 x 13 scaled up by 2/3*/
+}
+
+#wrapper #draw p {
+	float: left;
+	display: inline-block;
+	/* text-align */
+	width: 182px;
+}
+
+#wrapper #draw label {
+	display: inline-block;
+}
+
+
+#wrapper #target p {
+	float:left;
+	width:240px;
+}
+
+#wrapper #target img {
+	float: left;
+}
+
+#wrapper #concept {
+	display: grid;
+	grid-template-rows: repeat(4, 1fr);
+	float: left;
+	padding-right: 50px;
+	/* vertically center */
+	position: relative;
+	top: 50%;
+	transform: translate(0, -50%);
+}
+
+#wrapper #concept img {
+	opacity: 0.4;
+}
+
+#wrapper #concept img.checked {
+	outline: 2px solid #f00;
+	opacity: 1 !important;
+}
+
+#wrapper #draw input {
+	/* a hidden form on the drawing element to get form validation error */
+    opacity: 0;
+    height: 0px;
+	width: 0px;
+    display: block;
+	pointer-events: none;
+}
+
+#wrapper #draw img {
+	border-style: dotted;
+	/* margin: 0 auto; */
+}
+
+/* Container for the progress bar */
+#progress-container {
+	position: fixed;
+	bottom: 120px; /* 10px from the top of the screen */
+	left: 50px; /* 10px from the right of the screen */
+	width: 200px; /* Set the width of the progress container */
+	height: 15px; /* Height of the progress bar */
+	background-color: #dcdcdc; /* Light gray background */
+	border-radius: 10px; /* Rounded corners */
+}
+
+/* Actual progress bar inside the container */
+#progress-bar {
+	height: 100%;
+	width: 0%; /* Initial width (will be updated dynamically) */
+	background-color: #56c65a; /* Green color for the progress bar */
+	border-radius: 10px; /* Rounded corners */
+}
+
+/* Progress text styling */
+#progress-text {
+	position: fixed;
+	bottom: 150px; /* 40px from the top, below the progress bar */
+	left: 50px; /* Align with the progress bar on the right */
+	font-size: 12px; /* Adjust text size */
+	margin: 0;
+}
+
+#progress-container-2 {
+	position: fixed;
+	bottom: 120px; /* 10px from the top of the screen */
+	left: 260px; /* 10px from the right of the screen */
+	width: 100px; /* Set the width of the progress container */
+	height: 15px; /* Height of the progress bar */
+	background-color: #dcdcdc; /* Light gray background */
+	border-radius: 10px; /* Rounded corners */
+}
+
+/* Actual progress bar inside the container */
+#progress-bar-2 {
+	height: 100%;
+	width: 0%; 
+	background-color: #fea053; 
+	border-radius: 10px; 
+}
+
+/* Progress text styling */
+#progress-text-2 {
+	position: fixed;
+	bottom: 150px; 
+	left: 260px; 
+	font-size: 12px; 
+	margin: 0;
+}
+
+#wrapper .right .otree-btn-next {
+	float: right;
+}
+
+/* correct and wrong icons */
+img.green {
+	filter: brightness(0) saturate(100%) invert(39%) sepia(98%) saturate(1331%) hue-rotate(136deg) brightness(86%) contrast(101%);
+	/* filter: invert(42%) sepia(93%) saturate(1352%) hue-rotate(87deg) brightness(100%) contrast(119%); */
+	padding: 0 25px 0 25px;
+	height: 40px;
+}
+
+img.red {
+	filter: brightness(0) saturate(100%) invert(40%) sepia(73%) saturate(3299%) hue-rotate(13deg) brightness(94%) contrast(101%);
+	/* filter: invert(14%) sepia(67%) saturate(7462%) hue-rotate(10deg) brightness(114%) contrast(133%); */
+	padding: 0 25px 0 25px;
+	height: 40px;
+}
+
+.modal-header {
+	justify-content: center;
+}
+.modal {
+	text-align: center;
+}
+.modal-body img {
+	height: 180px;
+}
+
+.clear {
+	clear: both;
+}
+
+.otree-form-errors {
+	position: relative;
+	/* top: -40px; */
+}
+
+p {
+	margin-bottom: 2px;
+}
+
+.cols-2 {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+}
+
+#moderation_list {
+	width: 1376px;
+	min-width: 1000px;
+}
+
+#moderation_list div {
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	gap: 30px;
+}
+
+#moderation_list div img {
+	/* float:left; */
+	width: 400px;
+	flex-grow: 0;      /* do not grow   - initial value: 0 */
+	flex-shrink: 0;    /* do not shrink - initial value: 1 */
+	flex-basis: 400px; /* width/height  - initial value: auto */
+}
+#moderation_list div button {
+	float:left;
+	height:100%;
+	margin: auto 0;
+}
+
+#moderation_list p {
+	margin: auto 0;
+}
+
+div.form-control-errors {
+	font-size: 18px;
+	text-align: center;
+	margin-top: 20px;
+    margin-bottom: 10px;
+}

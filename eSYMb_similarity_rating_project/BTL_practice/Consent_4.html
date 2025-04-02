@@ -1,0 +1,41 @@
+  {{ block title }}
+<span style="display: none;">Consent_4</span>
+{{ endblock }}
+
+{% block content %}
+
+<style>
+  body {
+      background-color: ghostwhite;
+  }
+</style>
+
+<div class="card instructions panel panel-default">
+    <h4 class="card-header">Study procedure</h4>
+    <div class="collapse{{ instructions_hidden }}" id="instructionsbody">
+        <div class="card card-body">
+        <p>
+          In this experiment, you will be asked to draw lines on a blank, digital canvas. 
+          The number of lines you will be asked to draw will increase incrementally from 1 to 6 over the experimental trials. 
+        </p>
+        <p>
+          The drawing tool is designed in a way where you are free to decide the relative position and orientation of lines while it allows you to only draw straight lines of a particular length and thickness. 
+          Before the task begins, you will have time to familiarise yourself with the drawing tool. 
+        </p>
+        <p>
+          More detailed instructions will be provided when the experiment begins. 
+        </p>
+      </div>
+      </div>
+    </div>
+  </div>
+
+<br />
+<div style="float: right;">
+{{ next_button }}
+</div>
+
+{{ endblock }}
+
+  
+

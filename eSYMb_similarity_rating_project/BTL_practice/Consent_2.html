@@ -1,0 +1,40 @@
+  {{ block title }}
+<span style="display: none;">Consent_2</span>
+{{ endblock }}
+
+{% block content %}
+
+<style>
+  body {
+      background-color: ghostwhite;
+  }
+</style>
+
+<div class="card instructions panel panel-default">
+    <h4 class="card-header">Project description and aim of the study</h4>
+    <div class="collapse{{ instructions_hidden }}" id="instructionsbody">
+        <div class="card card-body">
+        <p>
+        The goal of the project is to investigate cognitive and cultural factors influencing the production of simple line drawings, to inform understandings about the evolution of symbolic behaviour. By comparing drawings across the world, we can map out potential patterns and investigate their universal and cultural tendencies which in turn can inform discussions about the emergence of archaeologically documented line patterns dating to 100,000 - 70,000 years ago.  
+        </p>
+        <p>
+        The study is part of a larger EU ERC project, eSYMb: The Evolution of Early Symbolic Behaviour, awarded to Professor Kristian Tylén, which integrates insights and methods from cognitive science and archaeology to inform questions about the evolution of symbolic cognition in the Palaeolithic.
+        </p>
+        <p>
+          Your participation will benefit researchers in the project as well as a general audience from a diverse field interested in studies of human evolution.
+        </p>
+      </div>
+      </div>
+    </div>
+  </div>
+
+<br />
+
+<div style="float: right;">
+  {{ next_button }}
+</div>
+
+{{ endblock }}
+
+  
+

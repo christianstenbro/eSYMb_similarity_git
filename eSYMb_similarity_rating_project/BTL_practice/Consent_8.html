@@ -1,0 +1,47 @@
+  {{ block title }}
+<span style="display: none;">Consent_8</span>
+{{ endblock }}
+
+{% block content %}
+
+<style>
+  body {
+      background-color: ghostwhite;
+  }
+</style>
+
+<div class="card instructions panel panel-default">
+    <h4 class="card-header">Signing consent</h4>
+    <div class="collapse{{ instructions_hidden }}" id="instructionsbody">
+        <div class="card card-body">
+        <p>
+          By clicking the <strong>I give my consent</strong> button, I confirm to have received, read and understood the above information and that:
+        </p>
+        <ol type="A">
+          <li style="margin-bottom: 15px;">My participation is voluntary, and I may withdraw my consent and discontinue participation in the experiment at any time.</li>
+          <li style="margin-bottom: 15px;">By accepting this agreement, I do not waive any legal rights or release Aarhus University, Denmark, its agents, or you from liability for negligence.</li>
+          <li style="margin-bottom: 15px;">I give my consent to participate as a subject in the study as described above.</li>
+        </ol>
+        <p>
+          After clicking the button, the experiment will begin after a short introduction.
+        </p>
+      </div>
+      </div>
+    </div>
+  </div>
+
+<br />
+
+<!--
+<button class="otree-btn-next btn btn-primary" id = "button_consent" type="button" style="width: 30%; margin: 0 auto; display: block;">
+	I give my consent
+  </button>
+-->
+  <button class="btn btn-primary" style="width: 30%; margin: 0 auto; display: block;">
+    I give my consent
+  </button>
+
+{{ endblock }}
+
+  
+

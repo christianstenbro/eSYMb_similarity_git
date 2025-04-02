@@ -1,0 +1,17 @@
+
+
+{{ if not lastround }}
+<div class="alert alert-danger">Select the last round. </div>
+{{ else }}
+
+
+<p>Order of participants for condition 2: style</p>
+
+
+<ul>
+  {{ for group in order }}
+  <li>{{ group.all }} {{ if group.old }}-- when {{ group.old }} are done, call in participants {{ group.new }} {{ endif }}</li>
+  {{ endfor }}
+</ul>
+
+{{ endif }}

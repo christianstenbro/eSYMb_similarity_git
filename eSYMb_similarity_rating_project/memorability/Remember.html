@@ -1,0 +1,26 @@
+
+{% block title %}
+<span style="display: none;">Remember</span>
+{% endblock %}
+
+{% block scripts %}
+
+<script type="text/javascript">
+ document.addEventListener("DOMContentLoaded", function(){
+	 p = document.querySelector(".otree-timer p");
+	 p.innerHTML = p.innerHTML.replace(" to complete this page", "");
+ });
+</script>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static 'esymb_transmission/experiment_layout.css' }}" type="text/css">
+{% endblock %}
+
+
+{% block content %}
+<div style="margin: 0 auto; width:{{C.IMG_DIM}}px; height:{{C.IMG_DIM}}px" >
+		<img src="{{ drawing }}"  width="{{C.IMG_DIM}}px" height="{{C.IMG_DIM}}px" >
+</div>
+
+{% endblock %}

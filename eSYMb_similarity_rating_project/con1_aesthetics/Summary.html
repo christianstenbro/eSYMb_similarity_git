@@ -1,0 +1,58 @@
+
+{{ block title }}
+<span style="display: none;">C1-P{{player.id_in_subsession}} </span>Well Done!
+{{ endblock }}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static 'esymb_transmission/experiment_layout.css' }}" type="text/css">
+{% endblock %}
+
+{{ block content }}
+
+<p>You have now completed this first part of the experiment. Here is a summary:</p>
+<div id="wrapper">
+  
+  <div id="history" class="left">
+	<table class="table table-sm">
+	  <thead>
+		<tr>
+		  <th scope="col"></th>
+		  <th scope="col">Your Drawing</th>
+		  <th scope="col"></th>
+		  <th scope="col"></th>
+		</tr>
+	  </thead>
+	  <tbody>
+		{{ for s in history }}
+		<tr>
+		  <th scope="row">{{ s.round1 }}</th>
+		  <td>
+			<div class="surface" style="background-image: url('{{s.usedsurface1}}');" >
+			  <img src="{{ s.image1 }}" width="{{C.IMG_DIM_SMALL}}px" height="{{C.IMG_DIM_SMALL}}px">
+			</div>
+		  </td>
+		  <th scope="row">{{ s.round2 }}</th>
+		  <td>
+			<div class="surface" style="background-image: url('{{s.usedsurface2}}');" >
+			  <img src="{{ s.image2 }}" width="{{C.IMG_DIM_SMALL}}px" height="{{C.IMG_DIM_SMALL}}px">
+			</div>
+		  </td>
+		</tr>
+		{{ endfor }}
+	  </tbody>
+	</table>
+  </div>
+  <div class="right">
+
+	<p>After you click next, you might have a break before the next part. This could be up to 30 minutes while other participants complete their parts. We appreciate your patience!</p>
+
+	<p>Click next to finish.</p>
+
+	<br />
+	<button class="otree-btn-next btn btn-primary" style="float: right;">
+	  Next part
+	</button>
+  </div>
+</div>
+
+{{ endblock }}

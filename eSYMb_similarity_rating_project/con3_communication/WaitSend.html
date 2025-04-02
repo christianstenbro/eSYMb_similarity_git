@@ -1,0 +1,63 @@
+
+{{ extends 'otree/WaitPage.html' }}
+
+{% block title %}
+<span style="display: none;">C3-P{{player.id_in_subsession}} </span>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ static 'esymb_transmission/drawing.js' }}" type="text/javascript"></script>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static 'esymb_transmission/experiment_layout.css' }}" type="text/css">
+{% endblock %}
+{{ block content }}
+{{ if player.role == C.RECEIVER_ROLE }}
+<div class="modal" tabindex="-1" role="dialog", id="modal">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Communication {{ if correct_status }}succeeded{{ else }}failed{{ endif }}</h5>
+      </div>
+      <div class="modal-body">
+		{{ correct_icon }}
+      </div>
+    </div>
+  </div>
+</div>
+<div id="wrapper">
+  <div class="left">
+	{{ if feedback_table }}
+	<table class="table table-sm">
+	  <thead>
+		<tr>
+		  <th scope="col"></th>
+		  <th scope="col">Drawing</th>
+		  <th scope="col">Your guess</th>
+		  <th scope="col">Correct?</th>
+		</tr>
+	  </thead>
+	  <tbody>
+		{{ for row in feedback_table }}
+		<tr>
+		  <th scope="row">{{ row.round }}</th>
+	  <td><img src="{{ row.drawing }}"  style="width: {{C.IMG_DIM_SMALL}}px;"></td>
+		  <td><img src="{{ row.guess }}"  style="width: {{C.IMG_DIM_SMALL}}px;"></td>
+		  <td>{{ row.correct }}</td>
+		</tr>
+		{{ endfor }}
+	  </tbody>
+	</table>
+	{{ endif }}
+  </div>
+  <div class="center" style="margin: 5px;">
+	<p>Waiting for the SENDER to finish their drawing.</p>
+  </div>
+  <div class="right">
+  </div>
+</div>
+{{ else }}
+<p>Waiting for the other participants.</p>
+{{ endif }}
+{{ endblock }}

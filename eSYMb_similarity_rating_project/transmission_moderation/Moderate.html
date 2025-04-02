@@ -1,0 +1,19 @@
+
+{% block title %}
+<span style="display: none;">Moderation client for Transmission Chain study</span>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static 'esymb_transmission/experiment_layout.css' }}" type="text/css">
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ static 'esymb_transmission/moderation.js' }}" type="text/javascript"></script>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper">
+	<div id="moderation_list">
+	</div>
+</div>
+{% endblock %}

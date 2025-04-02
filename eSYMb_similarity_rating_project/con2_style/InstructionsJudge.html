@@ -1,0 +1,26 @@
+
+
+
+<div class="card instructions panel panel-default">
+  <h4 class="card-header">Which drawing was made by the drawer from your group? Round {{ round }} of {{ C.ROUNDS }}.{{if not instructions_hidden }}<button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#instructionsbody" aria-expanded="false">Click for instructions</button>{{endif}}</h4>
+  <div class="collapse{{ instructions_hidden }}" id="instructionsbody">
+	<div class="card card-body">
+	  <p>Welcome!</p>
+
+	  <p>In this game, four people will play together split in two groups.  <br />
+		In your group, another player will be the DRAWER and YOU will be the GUESSER. <br />
+		In the other group there will also be one DRAWER and one GUESSER. <br />
+		The overall goal of the game is that the GUESSERS correctly identify the drawings made by the DRAWER from their own group. </p>
+
+	  <p>There are 8 rounds. In each round, the two DRAWERS will each make a drawing. Once they are finished, you (the GUESSER) will be shown the two drawings, and you will be asked to guess which drawing was made by the DRAWER from your group. <br />
+		At the end of each round, you will learn if your guess was correct or wrong. </p>
+
+	  <p>Your objective is to identify the drawings made by the DRAWER from your group. </p>
+
+	  <img src="{{ static 'esymb_transmission/instructions/identity-guesser.png' }}" style="width: 700px; margin: 20px auto;">
+	  
+	  <p>Click NEXT to begin.</p>
+
+	</div>
+  </div>
+</div>

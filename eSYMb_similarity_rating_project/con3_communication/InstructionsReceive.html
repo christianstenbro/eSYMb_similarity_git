@@ -1,0 +1,32 @@
+
+
+
+<div class="card instructions panel panel-default">
+  <h4 class="card-header">Which concept is the SENDER trying to communicate? Round {{ round }} of {{ C.ROUNDS }}.{{if not instructions_hidden }}<button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#instructionsbody" aria-expanded="false">Click for instructions</button>{{endif}}</h4>
+  <div class="collapse{{ instructions_hidden }}" id="instructionsbody">
+	<div class="card card-body">
+	  <p>Welcome!</p>
+
+	  <p>In this game, two people will play together as a group. <br />
+		Another player will be the SENDER and you will be the RECEIVER.  <br />
+		The overall goal of the game is that the RECEIVER correctly identifies the concepts that the SENDER is trying to communicate. </p>
+
+	  <p>Throughout the game, the SENDER and you (the RECEIVER) will see the same set of 4 concepts represented by the following images:  </p>
+
+	  <div id="pattern" style="margin: 20px auto;">
+		{{ for concept in C.CONCEPT_OPTIONS }}
+		<img src="{{ concept }}" width="{{C.IMG_DIM}}px" height="{{C.IMG_DIM}}px">
+		{{ endfor }}
+	  </div>
+
+	  <p>The SENDER will also see a set of 4 patterns (each pattern is composed of 6 black lines), but you will not see these patterns. <br />
+			There are 8 rounds. In each round, the SENDER will try to communicate one of the concepts to you by choosing and drawing one of the patterns. <br />
+			Your objective is to guess which concept the SENDER is trying to communicate. <br />
+			After you have received each concept once (rounds 1-4), you will have the chance to receive them again (rounds 5-8). </p>
+
+	  <img src="{{ static 'esymb_transmission/instructions/comm-receiver.png' }}" style="width: 700px; margin: 20px auto;">
+
+	  <p>Click NEXT to begin.</p>
+	</div>
+  </div>
+</div>

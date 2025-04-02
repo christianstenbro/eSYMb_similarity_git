@@ -1,0 +1,20 @@
+
+{{ block title }}
+<span style="display: none;">Practice</span>
+{{ endblock }}
+
+{{ block content }}
+<style>
+    body {
+        background-color: ghostwhite;
+    }
+  </style>
+
+{% include C.INSTRUCTIONS_TEMPLATE %}
+
+<br />
+<div style="float: right;">
+    {{ next_button }}
+    </div>
+
+{{ endblock }}

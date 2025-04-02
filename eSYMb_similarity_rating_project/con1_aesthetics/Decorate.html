@@ -1,0 +1,85 @@
+
+{% block title %}
+<span style="display: none;">C1-P{{player.id_in_subsession}} Decorate</span>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static 'esymb_transmission/experiment_layout.css' }}" type="text/css">
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ static 'esymb_transmission/drawing.js' }}" type="text/javascript"></script>
+<script src="{{ static 'esymb_transmission/html2canvas.js' }}" type="text/javascript"></script>
+{% endblock %}
+
+{% block content %}
+{% include C.INSTRUCTIONS_TEMPLATE %}
+<div id="wrapper">
+
+  <div id="history" class="left">
+
+	{{ if history }}
+	<table class="table table-sm">
+	  <thead>
+		<tr>
+		  <th scope="col"></th>
+		  <th scope="col">Your Drawing</th>
+		</tr>
+	  </thead>
+	  <tbody>
+		{{ for s in history }}
+		<tr>
+		  <th scope="row">{{ s.round }}</th>
+		  <td>
+			<div class="surface" style="background-image: url('{{s.usedsurface}}');" >
+			  <img src="{{ s.image }}"  width="{{C.IMG_DIM_SMALL}}px" height="{{C.IMG_DIM_SMALL}}px">
+			</div>
+		  </td>
+		</tr>
+		{{ endfor }}
+	  </tbody>
+	</table>
+	{{ endif }}
+
+	
+  </div>
+
+
+  <div class="right">
+	{{ formfield_errors 'pattern' }}
+	{{ formfield_errors 'linecount' }}
+	{{ formfield_errors 'drawing' }}
+	<p>1. Choose a pattern:</p>
+	<div id="pattern">
+	  {{ for s in patterns }}
+	  <label>
+		<input required type="radio" name="pattern" value="{{ s.value }}">
+		<img src="{{ s.image }}" alt="{{ s.value }}" width="{{C.IMG_DIM}}px" height="{{C.IMG_DIM}}px" onclick="deleteDrawing(); grayPatterns();">
+	  </label>
+	  {{ endfor }}
+	</div>
+
+	<div id="draw">
+	  <p>2. Draw:</p>
+	  
+	  
+	  <label>
+		<input required type="hidden" id="drawing" name="drawing">
+		<input required type="hidden" name="linecount" id="linecount">
+		<div id="surface" style="background-image: url('{{surface}}');">
+		  <div id="canvas" class="canvas"></div>
+		</div>
+	  </label>
+	</div>
+
+	
+	<button class="otree-btn-next btn btn-primary" type="button" onclick="submit_drawing_moderation(send_drawing_moderation_con1);" style="float: right;">
+	  3. Send
+	</button>
+
+  </div>
+  
+</div>
+
+
+{% endblock %}

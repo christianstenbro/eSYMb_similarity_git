@@ -1,0 +1,72 @@
+
+{% block title %}
+<span style="display: none;">Experiment: Practice</span>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static 'esymb_transmission/experiment_layout.css' }}" type="text/css">
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ static 'esymb_transmission/drawing_nomoderation.js' }}" type="text/javascript"></script>
+<script src="{{ static 'esymb_transmission/html2canvas.js' }}" type="text/javascript"></script>
+{% endblock %}
+
+{% block content %}
+{% include C.INSTRUCTIONS_TEMPLATE %}
+<div id="wrapper">
+
+  <div id="history" class="left">
+	<section style="grid-column: 1 / span 2;">
+	  <p>Here you can see four patterns and one is pre-selected.
+		Your task is to draw the selected pattern on the rock surface. The drawing area is the light-grey square delimited by a dotted line. </p>
+	  <p>Please follow each of the instructions below to familiarize yourself with the drawing tool that you will be using throughout the experiment:</p>
+	  <ol style="grid-column: 1 / span 2;">
+		<li>To draw a line, click and drag the cursor using your mouse.</li>
+		<li>To move a line, click on its center and drag it to the desired position.</li>
+		<li>To rotate a line, click on one of the ends and drag it to the desired position.</li>
+		<li>To delete a line, double-click on it.</li>     
+		<li>Note that you cannot place a line outside the drawing area (you can test this now). </li>
+	  </ol>
+	  <p/>When you are comfortable with the drawing tool, click END PRACTICE to end the practice round and begin the experiment.</p>
+</section>
+</div>
+
+
+  <div class="right">
+	{{ formfield_errors 'linecount' }}
+	{{ formfield_errors 'drawing' }}
+	<div id="pattern">
+	  {{ for s in patterns }}
+	  <label>
+		<img src="{{ s.image }}" alt="{{ s.value }}" width="{{C.IMG_DIM}}px" height="{{C.IMG_DIM}}px" onclick="deleteDrawing(); grayPatterns();" class="{{s.checked}}">
+	  </label>
+	  {{ endfor }}
+	</div>
+
+	<div id="draw">
+	  <p>1. Draw:</p>
+	  
+	  
+	  <label>
+		<input required type="hidden" name="drawing" id="drawing">
+		<input required type="hidden" name="linecount" id="linecount">
+		<div id="surface" style="background-image: url('{{surface}}'); margin-top:0 !important;">
+		  <div id="canvas" class="canvas"></div>
+		</div>
+	  </label>
+	</div>
+
+	<button class="otree-btn-next btn btn-primary" type="button" onclick="validate_drawing(submit_send)" style="float: right;">
+	  2. End Practice
+	</button>
+
+  </div>
+  
+</div>
+
+
+<br />
+
+
+{% endblock %}

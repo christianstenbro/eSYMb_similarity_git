@@ -1,0 +1,28 @@
+
+
+<div class="card instructions panel panel-default">
+  <h4 class="card-header">{{ if not instructions_hidden }}Choose a pattern to decorate the rock surface. Round {{ player.round_number }} of {{ C.NUM_ROUNDS }} <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#instructionsbody" aria-expanded="false">Click for instructions</button>{{ endif }}</h4>
+  <div class="collapse{{ instructions_hidden }}" id="instructionsbody">
+	<div class="card card-body">
+	  <p>Welcome to this part of the experiment.</p>
+
+	  <p>In this game, you will play individually.</p>
+
+	  <p>There are 8 rounds. In each round, you will see a set of patterns and a rock surface.
+		First, you choose which pattern you want to use to decorate the rock surface.
+		Then, you draw the chosen pattern on the surface using the drawing tool.
+		When you are happy with your drawing, click SEND to proceed.<p/>
+
+	  <p>There is no time limit, but we expect each drawing will take around 1 minute (it doesn't have to be perfect).</p>
+
+	  <p>Remember:<p/>
+		<ul>
+		  <li>Your drawing must match the chosen pattern, otherwise it may be rejected, and you will need to redraw it.</li>
+		  <li>To draw a line, click and drag your mous.</li>
+		  <li>To move a line, click on its center and drag it to the desired position.</li>
+		  <li>To rotate a line, click on one of the ends and drag it to the desired position.</li>
+		  <li>To delete a line, double-click on it.</li>
+		</ul>
+	</div>
+  </div>
+</div>

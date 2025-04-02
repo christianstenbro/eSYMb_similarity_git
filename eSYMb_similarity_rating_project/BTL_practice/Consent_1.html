@@ -1,0 +1,39 @@
+  {{ block title }}
+<span style="display: none;">Consent_1</span>
+{{ endblock }}
+
+{% block content %}
+
+<style>
+    body {
+        background-color: ghostwhite;
+    }
+  </style>
+
+<div class="card instructions panel panel-default">
+    <h4 class="card-header">Welcome!</h4>
+    <div class="collapse{{ instructions_hidden }}" id="instructionsbody">
+        <div class="card card-body">
+        <p>
+        We would like to ask you for your consent to participate in the study and for us to treat your data in agreement with data protection legislation. 
+        </p>
+        <p>
+        Before you decide to participate in this study, it is important that you understand why the research is being done and what it will involve. 
+        </p>
+        <p>
+        Please take the time to read the following information carefully.
+        </p>
+      </div>
+      </div>
+    </div>
+  </div>
+
+<br />
+<div style="float: right;">
+{{ next_button }}
+</div>
+
+{{ endblock }}
+
+  
+

@@ -1,0 +1,73 @@
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static 'esymb_transmission/experiment_layout.css' }}" type="text/css">
+{% endblock %}
+
+
+{% block scripts %}
+<script src="{{ static 'esymb_transmission/drawing.js' }}" type="text/javascript"></script>
+{% endblock %}
+
+{{ block title }}
+<span style="display: none;">C2-P{{player.id_in_subsession}} </span>Well Done!
+{{ endblock }}
+
+{% block content %}
+<div class="modal" tabindex="-1" role="dialog", id="modal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Guesses</h5>
+      </div>
+      <div class="modal-body">
+		{{ correct_icon_a }}
+		{{ correct_icon_b }}
+      </div>
+    </div>
+  </div>
+</div>
+<div id="wrapper">
+
+  <div id="feedback" class="left">
+	<table class="table table-sm">
+	  <thead>
+		<tr>
+		  <th scope="col"></th>
+		  <th scope="col">Drawing</th>
+		  <th scope="col">Guesser from your group</th>
+		  <th scope="col">Guesser from the other group</th>
+		</tr>
+	  </thead>
+	  <tbody>
+		{{ for row in feedback_table }}
+		<tr>
+		  <th scope="row">{{ row.round }}</th>
+		  <td><img src="{{ row.drawing }}"style="width: {{C.IMG_DIM_SMALL}}px;"></td>
+		  <td>{{ row.correct_a }}</td>
+		  <td>{{ row.correct_b }}</td>
+		</tr>
+		{{ endfor }}
+	  </tbody>
+	</table>
+  </div>
+
+
+  <div class="right">
+	<p>Well done!</p>
+	<p>You have now completed this part as the DRAWER.</p>
+	
+	<p>After you click next, you might have a break before the next part. This could be up to 30 minutes while other participants complete their parts. We appreciate your patience!</p>
+
+	<p>Click next to finish.</p>
+	
+	<button class="otree-btn-next btn btn-primary" style="float: right;">
+	  Next part
+	</button>
+  </div>
+
+	
+</div>
+
+
+
+{% endblock %}

@@ -1,0 +1,17 @@
+
+{{ block title }}
+    <span style="display: none;">C1-P{{player.id_in_subsession}} </span>Instructions
+{{ endblock }}
+
+{{ block content }}
+
+{% include C.INSTRUCTIONS_TEMPLATE %}
+
+<input type="hidden" class="form-control" id="id_playing" name="playing">
+{{ formfield_errors 'playing' }}
+
+<p>Click NEXT to begin.</p>
+<br />
+{{ next_button }}
+
+{{ endblock }}

@@ -1,0 +1,54 @@
+
+{% block title %}
+<span style="display: none;">Experiment: Practice</span>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static 'esymb_transmission/experiment_layout.css' }}" type="text/css">
+{% endblock %}
+
+{% block content %}
+
+{% include C.INSTRUCTIONS_TEMPLATE %}
+<div id="wrapper">
+
+<div id="feedback" class="left">
+</div>
+
+<div class="right">
+  {{ formfield_errors 'judge' }}
+  <p>Your drawing, with error measures::</p>
+  <ul>
+	<li>Hausdorf: {{player.error_hd}}</li>
+	<li>Lewis: {{player.error_lewis}}</li>
+	<li>Hu (cosine): {{player.error_hu_c}}</li>
+	<li>Hu (euclidean): {{player.error_hu_e}}</li>
+	<li>Hu (i1): {{player.error_hu_i1}}</li>
+	<li>Hu (i2): {{player.error_hu_i2}}</li>
+	<li>Hu (i3): {{player.error_hu_i3}}</li>
+  </ul>
+  <div id="drawing">
+	<img src="{{ drawing }}" width="{{C.IMG_DIM}}px">
+  </div>
+  <p>1. Which pattern does it look like the most?</p>
+  <div id="judge">
+	{{ for s in judgelist }}
+	<label>
+	  <input required type="radio" name="judge" value="{{ s.value }}">
+	  <img src="{{ s.image }}" width="{{C.IMG_DIM}}px">
+	</label>
+	{{ endfor }}
+  </div>
+  
+<br />
+<button class="otree-btn-next btn btn-primary">
+  2. Send
+</button>
+</div>
+
+</div>
+
+
+<br />
+
+{% endblock %}
