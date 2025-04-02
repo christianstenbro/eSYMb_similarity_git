@@ -252,6 +252,7 @@
 	height: 15px; /* Height of the progress bar */
 	background-color: #dcdcdc; /* Light gray background */
 	border-radius: 10px; /* Rounded corners */
+	overflow: hidden;
 }
 
 /* Actual progress bar inside the container */
@@ -259,7 +260,7 @@
 	height: 100%;
 	width: 0%; /* Initial width (will be updated dynamically) */
 	background-color: #56c65a; /* Green color for the progress bar */
-	border-radius: 10px; /* Rounded corners */
+	border-radius: 2px; /* Rounded corners */
 }
 
 /* Progress text styling */
