@@ -80,13 +80,6 @@ def playerid_error_message(player, value):
         print("ERROR")
         return "Please enter a valid ID"
 
-
-class Break(Page):
-    pass
-
-class Break_2(Page):
-    pass
-
 class AskID(Page):
     form_model = "player"
     form_fields = ["playerid"]
@@ -96,96 +89,6 @@ class AskID(Page):
         return player.round_number == 1
 
 
-class Rating_modification(Page):
-    form_model = "player"
-    form_fields = [#"drawing", 
-                   #"linecount", 
-                   #"startPosData", 
-                   #"angleData", 
-                   "imageRatings", 
-                   "imageIndices",
-                   "stimIndices"]
-
-    @staticmethod # sending variables to the HTML template
-    def vars_for_template(player):
-        
-        instructions_per_round = {
-            1: 'Rate the similarity:',
-            # 2: 'Draw two lines:',
-            # 3: 'Draw three lines:',
-            # 4: 'Draw four lines:',
-            # 5: 'Draw five lines:',
-            # 6: 'Draw six lines:',
-        }
-
-        return {
-            "instructions_hidden": "",
-            "round_instruction": instructions_per_round[1],
-            "round_number": player.round_number,
-            "id_in_group": player.id_in_group, # strangely, I can't use ID in session . . .
-            "drawings_pr_round": C.DRAWINGS_PR_ROUND,
-        }
-    
-    # send the round number variable to the backend java script
-    def js_vars(player):
-        return dict(
-            roundNumber=player.round_number,
-        )
- 
-    # # send the round number variable to the template (HTML page)
-    # def vars_for_template(player):
-    #     return dict(
-    #     round_number=player.round_number,
-    #     )
-        
-
-    #def is_displayed(player):
-    #    return player.round_number <= 6
-
-class Rating_modification_2(Page):
-    form_model = "player"
-    form_fields = ["imageRatings", 
-                   "imageIndices",
-                   "stimIndices"]
-
-    @staticmethod # sending variables to the HTML template
-    def vars_for_template(player):
-        
-        instructions_per_round = {
-            1: 'Rate the similarity:',
-        }
-
-        return {
-            "instructions_hidden": "",
-            "round_instruction": instructions_per_round[1],
-            "round_number": player.round_number,
-            "id_in_group": player.id_in_group, # strangely, I can't use ID in session . . .
-            "drawings_pr_round": C.DRAWINGS_PR_ROUND,
-        }
-    
-class Rating_modification_3(Page):
-    form_model = "player"
-    form_fields = ["imageRatings", 
-                   "imageIndices",
-                   "stimIndices"]
-
-    @staticmethod # sending variables to the HTML template
-    def vars_for_template(player):
-        
-        instructions_per_round = {
-            1: 'Rate the similarity:',
-        }
-
-        return {
-            "instructions_hidden": "",
-            "round_instruction": instructions_per_round[1],
-            "round_number": player.round_number,
-            "id_in_group": player.id_in_group, # strangely, I can't use ID in session . . .
-            "drawings_pr_round": C.DRAWINGS_PR_ROUND,
-        }
-
-### the definitive page set-up
-    
 class Rating_modification_round_structure(Page):
     form_model = "player"
     form_fields = ["imageRatings", 
