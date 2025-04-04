@@ -19,6 +19,6 @@ Once the environment is activated, install the packages in the requirements.txt:
 
     `pip install -r requirements.txt´
 
-Run the project from with:
+Test-run the project using:
 
     `otree devserver´
