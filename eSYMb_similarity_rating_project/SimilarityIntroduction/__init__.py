@@ -39,9 +39,9 @@ class C(BaseConstants):
     NUM_ROUNDS = 1
     ROUNDS = 1
     NUM_STIM = 0
-    INSTRUCTIONS_TEMPLATE = "BTL_practice/Instructions.html"
+    INSTRUCTIONS_TEMPLATE = "SimilarityIntroduction/Instructions.html"
     SURFACE_OPTIONS = [
-        f"/static/BTL/objects_decoration/Object trace {i}.png"
+        f"/static/similarity/objects_decoration/Object trace {i}.png"
         for i in range(1, 8 + 1) # figure out what surface options refers to
     ]
     # PATTERN_SEED = [
@@ -123,6 +123,26 @@ class Consent_7(ConsentPage):
 class Consent_8(ConsentPage):
     pass
 
+# Defining instruction pages
+
+class InstructionPage(Page):
+    @staticmethod
+    def vars_for_template(player):
+        return {"instructions_hidden": ".show"}
+
+class Instruction_1(InstructionPage):
+    pass
+
+class Instruction_2(InstructionPage):
+    pass
+
+class Instruction_3(InstructionPage):
+    pass
+
+class Instruction_4(InstructionPage):
+    pass
+
+
 # Defining other pages
 
 class Introduction(Page):
@@ -163,7 +183,17 @@ class Decorate(Page):
         }
     
 page_sequence = [
-    Consent_1, Consent_2, Consent_3, Consent_4, Consent_5, Consent_6, Consent_7, Consent_8,
-    Introduction,
-    Decorate,
+    # Consent_1, 
+    # Consent_2, 
+    # Consent_3, 
+    # Consent_4, 
+    # Consent_5, 
+    # Consent_6, 
+    # Consent_7, 
+    # Consent_8,
+    Instruction_1,
+    Instruction_2,
+    Instruction_3,
+    Instruction_4,
+    #Decorate,
 ]

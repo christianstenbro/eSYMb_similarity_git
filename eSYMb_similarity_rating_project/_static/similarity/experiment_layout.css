@@ -318,6 +318,12 @@ img.red {
 	height: 40px;
 }
 
+.centered-img {
+	display: block;
+	margin: 0 auto;
+	max-width: 100px;
+}
+
 .modal-header {
 	justify-content: center;
 }

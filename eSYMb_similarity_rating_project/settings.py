@@ -64,7 +64,8 @@ SESSION_CONFIGS = [
     dict(
         name="SimilarityRatingExperiment",
         display_name="SimilarityRatingExperiment",
-        app_sequence=[#"BTL_practice", 
+        app_sequence=[
+            "SimilarityIntroduction", 
             "SimilarityRatingExperiment"],
         num_demo_participants=10,
     ),
