@@ -32,29 +32,20 @@ drawing outside the canvas -> error
 
 """
 
+# defining parameters (for the practice round only)
+drawings_pr_round = 1
 
+# setting up classes
 class C(BaseConstants):
-    NAME_IN_URL = "LinePractice"
-    PLAYERS_PER_GROUP = None
+    NAME_IN_URL = "SimilarityIntroduction" 
+    PLAYERS_PER_GROUP = None # not relevant to our experiment either, I suppose
     NUM_ROUNDS = 1
-    ROUNDS = 1
-    NUM_STIM = 0
-    INSTRUCTIONS_TEMPLATE = "SimilarityIntroduction/Instructions.html"
-    SURFACE_OPTIONS = [
-        f"/static/similarity/objects_decoration/Object trace {i}.png"
-        for i in range(1, 8 + 1) # figure out what surface options refers to
-    ]
-    # PATTERN_SEED = [
-    #     "/static/esymb_transmission/seeds/practice_trial2.png",
-    #     "/static/esymb_transmission/seeds/foil_1.png",
-    #     "/static/esymb_transmission/seeds/foil_2.png",
-    #     "/static/esymb_transmission/seeds/foil_3.png",
-    # ]
-    # IMG_DIM = 155
-    # GRID_DIM = 312
+    INSTRUCTIONS_TEMPLATE = "SimilarityRatingExperiment/Instructions.html" 
+    IMG_DIM = 400 # could be the dimensions of the shown image
+    GRID_DIM = 312 # could be the dimensions of the drawing surface
+    DRAWINGS_PR_ROUND = drawings_pr_round
 
-    # C: Commenting the above out this effectively removed the stimuli
-
+# defining pages
 
 class Subsession(BaseSubsession):
     pass
@@ -66,11 +57,11 @@ class Group(BaseGroup):
 
 class Player(BasePlayer):
     prolific_id = models.StringField(default=str("NA"))
-    drawing = models.LongStringField()
-    linecount = models.IntegerField()
-    surface = models.IntegerField()
-    startPosData = models.StringField(blank=True) # blank=True makes the field optional
-    angleData = models.StringField(blank=True)
+    #playerid = models.IntegerField()
+    # adding new variables for the sim.experiment
+    imageRatings = models.StringField(blank=True)
+    imageIndices = models.StringField(blank=True)
+    stimIndices = models.StringField(blank=True)
 
 
 def pattern_choices(player):
@@ -142,6 +133,31 @@ class Instruction_3(InstructionPage):
 class Instruction_4(InstructionPage):
     pass
 
+# Defining rating practice page
+
+class Rating_practice(Page):
+    form_model = "player"
+    form_fields = ["imageRatings", 
+                   "imageIndices",
+                   "stimIndices"]
+
+    @staticmethod # sending variables to the HTML template
+    def vars_for_template(player):
+        
+        instructions_per_round = {
+            1: 'Rate the similarity:',
+        }
+
+        return {
+            "instructions_hidden": "",
+            "round_instruction": instructions_per_round[1],
+            "round_number": player.round_number,
+            "id_in_group": player.id_in_group, # strangely, I can't use ID in session . . .
+            "drawings_pr_round": C.DRAWINGS_PR_ROUND,
+        }
+    
+    # def is_displayed(player):
+    #        return player.round_number in [1, 3, 5]
 
 # Defining other pages
 
@@ -195,5 +211,6 @@ page_sequence = [
     Instruction_2,
     Instruction_3,
     Instruction_4,
+    Rating_practice,
     #Decorate,
 ]

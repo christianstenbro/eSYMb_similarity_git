@@ -143,11 +143,11 @@ console.log("roundSetSize", roundSetSize);
 
 // Function to construct the image URL dynamically
 function getImageUrl(index) {
-    let stimIndex = stimList[idInGroup][index-1]; //the 'key' needs to be the idInGroup; the -1 is due to the 0 indexing of JS
-    console.log(`/static/similarity/images/batch_2/test_pair_${stimIndex}_batch_2.png`);
-    console.log('current stim index =', stimIndex)
-    return `/static/similarity/images/batch_2/test_pair_${stimIndex}_batch_2.png`;
-    return stimIndex;
+    //let stimIndex = stimList[idInGroup][index-1]; //the 'key' needs to be the idInGroup; the -1 is due to the 0 indexing of JS
+    //console.log(`/static/similarity/images/batch_2/test_pair_${stimIndex}_batch_2.png`);
+    //console.log('current stim index =', stimIndex)
+    return `/static/similarity/practice_images/practice_image_stand_in.png`; // this is set to a fixed image in the practice round
+    //return stimIndex;
 }
 
 function getStimIndex(index) {
@@ -200,7 +200,7 @@ function loadNextImage() {
 		console.log("data logged");
 	};
 
-    // Construct the next image URL dynamically
+    // Construct the next image URL dynamically --> for the practice round, this can simply be hard-coded to the practice image
     let nextImageUrl = getImageUrl(currentImageIndex);
     console.log("currentImageIndex", currentImageIndex)
 
@@ -231,6 +231,8 @@ console.log("drawingsPrRound =", drawingsPrRound)
 
 window.onload = function () {
     document.getElementById('imagePair').src = getImageUrl(currentImageIndex);
+    // --> for the practice round, this can simply be hard-coded to the practice image
+    console.log(document.getElementById('imagePair').src = getImageUrl(currentImageIndex));
     let progress = (imageIndices.length / roundSetSize) * 100;
         document.getElementById('progress-bar').style.width = progress + '%';
         document.getElementById('progress-text').innerText = `${imageIndices.length}/${roundSetSize} images rated in current set`;
