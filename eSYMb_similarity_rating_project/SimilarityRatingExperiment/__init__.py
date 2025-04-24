@@ -15,19 +15,20 @@ import math
 
 """
 
-# defining parameters 
-# the parameters should correspond to the ones in the stimSet gen script
+# Parameters that can be modified.
+# Some of these parameters should correspond to the ones in the stimSet gen script
 ratings_pr_drawing = 3 # modified from 7
 num_participants = 100
 num_total_drawings = 1000 # modified from 4751
 num_rounds = 3
+num_attention_checks_pr_round = 5
+
+# Parameters that are set automatically based on the above
 num_breaks = num_rounds - 1
-
 stim_set_size = math.ceil(num_total_drawings * ratings_pr_drawing / num_participants)
-
 drawings_pr_round = math.ceil(stim_set_size / num_rounds)
 
-# setting up classes
+# Setting up classes
 class C(BaseConstants):
     NAME_IN_URL = "SimilarityRatingExperiment" 
     PLAYERS_PER_GROUP = None # not relevant to our experiment either, I suppose
@@ -36,6 +37,7 @@ class C(BaseConstants):
     IMG_DIM = 400 # could be the dimensions of the shown image
     GRID_DIM = 312 # could be the dimensions of the drawing surface
     DRAWINGS_PR_ROUND = drawings_pr_round
+    NUM_ATTENTION_CHECKS_PR_ROUND = num_attention_checks_pr_round
 
 # pass probably = not relevant for this experiment
 class Subsession(BaseSubsession):
@@ -53,6 +55,7 @@ class Player(BasePlayer):
     imageRatings = models.StringField(blank=True)
     imageIndices = models.StringField(blank=True)
     stimIndices = models.StringField(blank=True)
+    isAttentionCheck = models.StringField(blank=True) # could be a logical binary variable
     
 # def creating_session(subsession):
 #     subsession.session.vars["memorability_db"] = C.STIM_DB)
@@ -73,13 +76,13 @@ class Introduction(Page):
     def before_next_page(player, timeout_happened):
         player.prolific_id = player.participant.label
 
-
 def playerid_error_message(player, value):
     print("validating", value)
     print(pd.unique(C.STIM_DB.participant))
     if value not in C.STIM_DB.participant.values:
         print("ERROR")
         return "Please enter a valid ID"
+
 
 class AskID(Page):
     form_model = "player"
@@ -109,10 +112,12 @@ class Rating_modification_round_structure(Page):
             "round_number": player.round_number,
             "id_in_group": player.id_in_group, # strangely, I can't use ID in session . . .
             "drawings_pr_round": C.DRAWINGS_PR_ROUND,
+            "num_attention_checks_pr_round": C.NUM_ATTENTION_CHECKS_PR_ROUND,
         }
     
     def is_displayed(player):
            return player.round_number in [1, 3, 5]
+
 
 class BreakPage(Page):
 
@@ -120,6 +125,7 @@ class BreakPage(Page):
     def is_displayed(player: Player):
         """ Show break after rounds 2 and 4 (but not on the last round) """
         return player.round_number in [2, 4]
+
 
 class Goodbye(Page):
     form_model = "player"

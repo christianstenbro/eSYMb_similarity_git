@@ -36,6 +36,69 @@ colnames(d1)
 d1$drawing[1]
 ```
 
+# 0. Combining attention check images
+
+```{r}
+# loading attention check images into magick image objects
+path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/attention_check_drawings"
+
+star_path = paste0(path, "/star.png")
+vertical_path = paste0(path, "/vertical.png")
+xxx_path = paste0(path, "/xxx.png")
+
+star <- image_read(path = star_path)
+vertical <- image_read(path = vertical_path)
+xxx = image_read(path = xxx_path)
+
+# combining all images
+sv <- image_append(c(star, vertical))
+ss <- image_append(c(star, star))
+vv <- image_append(c(vertical, vertical))
+sx <- image_append(c(star, xxx))
+xv <- image_append(c(xxx, vertical))
+xx <- image_append(c(xxx, xxx))
+
+# saving images (this should be set up as a loop . . .)
+path_name = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/attention_check_export/"
+  file_name = paste0(path_name,"attention_check_","xx",".png")
+  png(file_name, units="in", width=7.29, height=4.51, res=500)
+
+plot(xx)
+
+dev.off()
+```
+
+```{r}
+# making a JSON dictionary type file for loading attention check files
+
+# making path names
+check_name <- (c("sv", "ss", "vv", "sx", "xv", "xx"))
+
+path_names <- list()
+
+for (i in check_name){
+  path_names[i] <- print(paste0("attention_check_",i,".png"))
+}
+
+path_names <- unname(unlist(path_names))
+
+# attention_dictionary <- data_frame(
+#   "index" = c(1,2,3,4,5,6),
+#   "path" = path_names)
+
+# converting to JSON file
+attention_JSON <- jsonlite::toJSON(path_names, pretty = TRUE)
+
+# saving the JSON file
+path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/attention_check_list/"
+name = "attentionJSON"
+iteration = "_1" # remember to change this to not overwrite previous sets
+extension = ".JSON"
+
+write(attention_JSON, file = paste0(path, name, iteration, extension))
+```
+
+
 # 1. Visualising pairs
 
 ## Visualise 10 pairs:
@@ -208,6 +271,7 @@ What we really want could also be achieved in the following (perhaps slightly mo
 participant_number = 100
 ratings = 3
 setSize <- 1000 # normally this should be length(d1$drawing)
+attention_checks <- 6
 ```
 
 ```{r}
@@ -328,7 +392,7 @@ names(setList) <- as.character(seq_along(setList))
 setListJSON <- jsonlite::toJSON(setList, pretty = TRUE)
 
 # checking the data structure
-setListJSON
+#setListJSON
 ```
 
 ```{r}
