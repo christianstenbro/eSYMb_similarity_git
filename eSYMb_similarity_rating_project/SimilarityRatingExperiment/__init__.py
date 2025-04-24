@@ -21,7 +21,7 @@ ratings_pr_drawing = 3 # modified from 7
 num_participants = 100
 num_total_drawings = 1000 # modified from 4751
 num_rounds = 3
-num_attention_checks_pr_round = 5
+num_attention_checks_in_total = 10
 
 # Parameters that are set automatically based on the above
 num_breaks = num_rounds - 1
@@ -37,7 +37,7 @@ class C(BaseConstants):
     IMG_DIM = 400 # could be the dimensions of the shown image
     GRID_DIM = 312 # could be the dimensions of the drawing surface
     DRAWINGS_PR_ROUND = drawings_pr_round
-    NUM_ATTENTION_CHECKS_PR_ROUND = num_attention_checks_pr_round
+    NUM_ATTENTION_CHECKS_IN_TOTAL = num_attention_checks_in_total
 
 # pass probably = not relevant for this experiment
 class Subsession(BaseSubsession):
@@ -112,7 +112,7 @@ class Rating_modification_round_structure(Page):
             "round_number": player.round_number,
             "id_in_group": player.id_in_group, # strangely, I can't use ID in session . . .
             "drawings_pr_round": C.DRAWINGS_PR_ROUND,
-            "num_attention_checks_pr_round": C.NUM_ATTENTION_CHECKS_PR_ROUND,
+            "num_attention_checks_in_total": C.NUM_ATTENTION_CHECKS_IN_TOTAL,
         }
     
     def is_displayed(player):
