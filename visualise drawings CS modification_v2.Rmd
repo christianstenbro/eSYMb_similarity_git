@@ -1,0 +1,453 @@
+---
+title: "visualizing drawings"
+author: "Murillo Pagnotta"
+date: "2025-02-28"
+output: html_document
+---
+
+# 0. Set-up
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+pacman::p_load(
+  tidyverse,
+  base64enc,
+  imager,
+  magick,
+  ggplot2, 
+  rethinking)
+```
+
+
+
+# 1. Create stimuliFileNameList (no need to run if list already exists)
+
+Comments on the new stimuli:
+
+- There are 1584 files from study 1 and 4751 files from study 3
+(this is one more than expected for study 3)
+
+- This adds up to 6335 files to rate in total
+
+- I have made a copy of the study 1 folder, containing only half of the files (the ones named 'study_1_...') - the other half seemed to be copies (but this should be confirmed).
+
+The script below does the following: 
+
+- Loads all file names into a combined list
+
+- Saves this list in a JSON format
+
+The files can then be loaded from the Otree experiment based on their index in this JSON file. The benefit of this system is, that we can easily change the stimuli set and that the original file names are preserved.
+
+```{r}
+# loading the file names from both studies
+study_1_stimuli <- list.files(path = '/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/study1_PNAS_combined_img_only')
+  
+study_3_stimuli <- list.files(path = '/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/study3_3conditions')
+
+# checking lengths
+print(length(study_1_stimuli))
+print(length(study_3_stimuli))
+
+# combining the file names into a single list
+combined_stimuli <- c(study_1_stimuli, study_3_stimuli)
+
+# checking that lengths align
+length(combined_stimuli) == (length(study_1_stimuli) + length(study_3_stimuli))
+
+print(length(combined_stimuli))
+
+# converting the file name list to a JSON file
+stimuliFileNameList <- jsonlite::toJSON(combined_stimuli, pretty = TRUE)
+
+# saving the JSON file
+path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/stimuliFileNameLists/"
+name = "stimuliFileNameList"
+iteration = "_1"
+extension = ".JSON"
+write(stimuliFileNameList, file = paste0(path, name, iteration, extension))
+```
+
+```{r}
+# saving the set
+path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/drawing_lists/"
+name = "setListJSON"
+iteration = "_2"
+extension = ".JSON"
+
+write(setListJSON, file = paste0(path, name, iteration, extension))
+```
+
+
+
+# 2. Creating 100 participant rating sets
+
+Comments:
+
+The following scripts creates a new nested JSON file with 100 different stimuli lists, that can be used in Otree to load the specified files.
+
+These stimuli lists are created in a way that ensures that (1) each list is unique and (2) no single drawing appears more than a single time within the set to be rated by the same participant.
+
+Also, it is important to note that the sets are created in a non-deterministic way; hence, it is important to save created sets with a unique iteration number, as they will not be reproducible without a fixed random seed.
+
+## 2.1 Loading the stimuliFileNameList
+
+The stimuliFileNameList (containing file names from study 1 and 3) is loaded. The list is only used to set a length parameter that will be used in the script to generate the participant rating sets.
+
+```{r}
+fileNameList <- jsonlite::read_json('/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/stimuliFileNameLists/stimuliFileNameList_1.JSON', simplifyVector = TRUE) # simplifyVector = true removes unnecessary nesting
+
+cat("Number of drawings =", length(fileNameList))
+```
+
+## 2.2 Generating 100 subsets from the total number of drawings
+
+Then, the number of participants is decided:
+
+```{r}
+participant_num <- 100
+```
+
+Which is used to generate 100 smaller subsets of the entire stimuli set:
+
+```{r}
+# defining the number of pairs in the entire set
+drawingNumber <- length(fileNameList)
+
+pairIndices <- seq(0:(drawingNumber-1)) # notice that this is ZERO-INDEXED to enable JavaScript compatibility 
+
+# setting number of divisions (corresponding to number of participants)
+breaks <- participant_num
+
+# creating ordered index
+sampleIdx <- cut(pairIndices, breaks = breaks, labels = FALSE)
+
+# scramble the index
+sampleIdx <- sample(sampleIdx)
+
+# splitting the set
+smallSets <- split(pairIndices, sampleIdx)
+
+# shuffling the order of integers within each set
+smallSets <- lapply(smallSets, sample)
+
+# figuring out if the split works
+setLength <- list()
+
+for (i in 1:length(smallSets)) {
+  
+  setLength[i] <- length(smallSets[[i]])
+  
+}
+
+# checking that it sums up correctly; that no indices are lost
+sum(unlist(setLength))
+```
+
+Notice that the split functions creates sets of two different sizes. This is the case since 6335 does not split evenly into a hundred sets. So, some sets will be 64 and some 63. This introduces variation which will be increased further when the small subsets are recombined into the final rating sets.
+
+We can visualize the variation:
+
+```{r}
+small_set_length_list <- lapply(smallSets, length)
+simplehist(unlist(small_set_length_list),
+           xlab = "number of drawings in the samll sets")
+```
+
+## 2.3 Combining these subsets n times to ensure n number of ratings pr. drawing
+
+The next step is to make a system that recombines the smaller sets into final rating sets in a way that makes sure each drawing is rated n times.
+
+One solution is to combine all sets with n other sets. This can't be randomized as we need to make sure that all drawings are rated n times. 
+
+Hence, we want to combine the sets in the following fashion:
+
+    smallSets[[1]] + smallSets[[2]] + smallSets[[3]] + smallSets[[4]] + smallSets[[5]]
+    
+    smallSets[[2]] + smallSets[[3]] + smallSets[[4]] + smallSets[[5]] + smallSets[[6]]
+    
+    smallSets[[3]] + smallSets[[4]] + smallSets[[5]] + smallSets[[6]] + smallSets[[7]]
+    
+    smallSets[[4]] + smallSets[[5]] + smallSets[[6]] + smallSets[[7]] + smallSets[[8]]
+    
+    smallSets[[5]] + smallSets[[6]] + smallSets[[7]] + smallSets[[8]] + smallSets[[9]]
+    
+    .  .  .
+
+```{r}
+# defining the number of sets to be combined (corresponding to the number of ratings pr. drawing pair)
+n <- 7
+
+# this is then used to make an offset sequence
+offsets <- seq(0, n-1)
+
+# setting up empty list
+setList <- list()
+
+# looping through the small sets and combining them according to the specified structure
+for (i in 1:100) {
+  setList[[i]] <- unlist( lapply( 
+    offsets, function( x ) smallSets[[( i - 1 + x ) %% 100 + 1]] # computes indices of small sets as a function of the offset parameter
+    ) )
+}
+
+# randomizing order of entries within each list of drawing pair indices (to make sure no participant is presented with similar orders of drawings)
+setList <- lapply(setList, sample)
+```
+
+Performing checks:
+
+```{r}
+# checking the length of the final lists of lists
+length(setList)
+
+# visualising to check that each pair appears n times across all lists
+simplehist(unlist(setList))
+unique(table(unlist(setList)))
+
+# checking that none of the lists has any repeating pairs
+status <- list()
+
+for (i in 1:length(setList)) {
+
+  status[i] <- (length(unique(setList[[i]])) == length(setList[[i]]))
+
+  }
+
+unique(status)
+```
+
+```{r}
+unpackedSet <- tibble(unlist(setList))
+
+colnames(unpackedSet) <- "idx"
+
+# the length of this set should correspond to n for all indices
+# what we are checking is that each drawing (yet only an index) appears n times in total across all rating sets
+length(t(filter(unpackedSet, idx == "6000"))) == n
+```
+
+```{r}
+# finally, we can visualise the length of each individual rating set to appreciate that there is a bit of variation in the length
+length_list <- lapply(setList, length)
+simplehist(unlist(length_list), 
+           xlab = "number of drawings in the final rating sets \n(before adding attention checks)")
+```
+
+# 3. Adding attention checks to rating sets (make better commentary)
+
+We want to make a tiny script that does the following: 
+
+    - Generates 6 position (indices), somewhat equally spaced from [1, n], with the first corresponding to 1 and the            last one to n.
+
+    - Adds code names for the six attention check files at these specified positions
+    
+    - The code names themselves can be randomized
+    
+    - The four 'middle' attention check position can be randomized to a specific range
+    
+With the new stimuli set, the total number pr. participant (with 7 ratings pr. stimuli) is 433.33
+  
+We can use this to find the location of the attention checks. It is important that this is parametric and can change dynamically with for example fewer ratings (resulting in an overall smaller rating set pr. participant).
+
+```{r}
+# testing
+test_list <- c(1,2,3,4,5,6)
+
+test_list <- append(test_list, "att_check_1", after = -0)
+
+test_list
+
+# test 2 - using vectors
+
+test_list2 <- c(1,2,3,4,5,6)
+
+position_list <- c(0, 5)
+
+new_items <- c("test1", "test2")
+
+for (j in 1:2) {
+
+test_list2 <- append(test_list2, new_items[j], after = position_list[j])
+
+}
+
+test_list2
+```
+
+This works fine; but the 'after' parameter should be dependent on the value of some variable. 
+
+We could make a list of six indices, that can then be loaded into a loop to indicate the position of the attention check. 
+
+```{r}
+# we have the following parameters
+stimuli_set_length <- length(setList[[1]]) # this should be different depending on the actual set list
+
+interval_span <- 20
+
+interval_center <- ceiling(stimuli_set_length / 6)
+
+# we can now sample random positions
+plot(
+  sample(( interval_center - interval_span ):( interval_center + interval_span ), 20, replace = TRUE),
+  ylim=c(0,100))
+```
+
+```{r}
+# we can now turn this into a function 
+create_attention_check_index <- function(stimuli_set_length, interval_span) {
+  
+  interval_center <- ceiling(stimuli_set_length / 6);
+  
+  att_check_position_list <- c(stimuli_set_length, 
+                             sample((interval_center*4 - interval_span ):( interval_center*4 + interval_span ), 1), 
+                             sample((interval_center*3 - interval_span ):( interval_center*3 + interval_span ), 1) , 
+                             sample((interval_center*2 - interval_span ):( interval_center*2 + interval_span ), 1) , 
+                             sample((interval_center*1 - interval_span ):( interval_center*1 + interval_span ), 1) , 
+                             0); # this has to be in reversed order as the set will keep growing as we add new entries
+
+  return(att_check_position_list)
+  
+}
+
+# and test it out:
+create_attention_check_index(stimuli_set_length = 434, interval_span = 10)
+```
+
+Next up, we should make some proxy names for the attention check files:
+
+```{r}
+attention_check_names <- c("a1", "a2", "a3", "a4", "a5", "a6")
+
+# ideally, we want these shuffled right away as the new set lists are generated
+# perhaps the easiest way to do this is simply to run the shuffle in the 'outer' loop using sample
+```
+
+
+Now, this function can be placed inside of the loop that generates the stimuli sets:
+
+```{r}
+# set parameters
+interval_span = 10
+
+# creating a new list
+setListAttCheck <- list()
+
+# looping through the old set lists to add attention checks
+for (i in 1:100) {
+  
+  x <- setList[[i]];
+  
+  shuffled_att_check_names <- sample(attention_check_names);
+  
+  att_check_index_list <- create_attention_check_index(stimuli_set_length = length(setList[[i]]), 
+                             interval_span = interval_span);
+  for (j in 1:6) {
+    
+    x <- append(x, shuffled_att_check_names[j], after = att_check_index_list[j]);
+    
+  }
+  
+  setListAttCheck[[i]] <- x;
+  
+}
+```
+
+```{r}
+# adding indices ('names') to the setList
+names(setListAttCheck) <- as.character(seq_along(setListAttCheck))
+```
+
+```{r}
+# converting to JSON
+setListAttCheckJSON <- jsonlite::toJSON(setListAttCheck, pretty = TRUE)
+
+# checking the data structure
+head(setListAttCheckJSON)
+```
+
+We can now save this file to the drive:
+
+```{r}
+path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/drawing_lists/"
+name = "setListAttCheck"
+iteration = "_2a"
+extension = ".JSON"
+
+write(setListAttCheckJSON, file = paste0(path, name, iteration, extension))
+```
+
+
+# Drafts and left-overs
+
+<!-- ## Figuring out round structure -->
+
+<!-- ```{r} -->
+<!-- participantStimSetSize <- length(setList[[1]]) -->
+
+<!-- pairsPrRound <- 3 -->
+
+<!-- roundNumber <- ceiling( participantStimSetSize / pairsPrRound ) -->
+
+<!-- cat("Number of rounds =", roundNumber) -->
+<!-- ``` -->
+
+<!-- The above should be embedded directly into the experiment script (in the ____init.py____ file); and should be generated based on the parameters. -->
+
+<!-- Notice that due to the use of the ceiling function, the last round will have fewer pairs. The script should be able to accommodate this.  -->
+
+<!-- ```{r} -->
+<!-- # with the new structure -->
+
+<!-- # defining parameters -->
+<!-- allPairs <- length(t(d1[1])) -->
+<!-- desiredRatingsPrPair <- 7 -->
+<!-- participantNumber <- 100 -->
+
+<!-- allPairs -->
+
+<!-- # computing total number of drawings to rate pr. participant -->
+<!-- participantStimSetSize <- ceiling( allPairs * desiredRatingsPrPair / participantNumber ) -->
+
+<!-- # this should correspond to the size of each subset in the StimSet -->
+<!-- participantStimSetSize == length(setList[[1]]) -->
+
+<!-- # defining number of rounds -->
+<!-- rounds <- 3 -->
+
+<!-- # computing number of drawings to be displayed pr. round -->
+<!-- pairPrRound <- ceiling( participantStimSetSize / rounds ) -->
+
+<!-- cat("PairsPrRound =", pairPrRound, "; Rounds =", rounds) -->
+<!-- ``` -->
+
+<!-- This should be defined in the python file. And then determine settings within the 'Rating' html template. -->
+
+
+<!-- ## Saving the setList as a JSON-file: -->
+
+<!-- ```{r} -->
+<!-- # adding indices ('names') to the setList -->
+<!-- names(setList) <- as.character(seq_along(setList)) -->
+
+<!-- # converting to JSON -->
+<!-- setListJSON <- jsonlite::toJSON(setList, pretty = TRUE) -->
+
+<!-- # checking the data structure -->
+<!-- setListJSON -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- # saving the set -->
+<!-- path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/drawing_lists/" -->
+<!-- name = "setListJSON" -->
+<!-- iteration = "_2" -->
+<!-- extension = ".JSON" -->
+
+<!-- write(setListJSON, file = paste0(path, name, iteration, extension)) -->
+<!-- ``` -->
+
+<!-- I wonder whether this could be incorporated directly into the Otree experiment . . . in a sense generated live once the session is instantiated. Not sure if this is a more or less complicated solution though. -->
