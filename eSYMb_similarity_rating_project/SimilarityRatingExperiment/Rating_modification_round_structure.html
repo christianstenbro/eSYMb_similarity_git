@@ -33,7 +33,7 @@
         <div id="draw">
             <label>
                 <!-- Adding image for testing; this is overwritten by the JS and is just a placeholder -->
-               <img id="imagePair" src="{{ static 'similarity/images/batch_1/test_pair_1_batch_1.png' }}" alt="Temporary Image" style="width: 100%; max-width: 600px;">
+               <img id="imagePair" src="{{ static 'similarity/images/batch_1/test_pair_1_batch_1.png' }}" alt="Temporary Image" style="width: 100%; max-width: 600px; padding: 40px;">
             </label>
         </div> 
         
@@ -99,7 +99,7 @@ let stimList = {};
 function getDataSync(index) {
     let request = new XMLHttpRequest();
     // notice that the path to the setListJSON file is here modified from 3 to 2 (the smaller internal test set)
-    request.open("GET", "/static/similarity/stim_lists/setListJSON_2.JSON", false); // `false` makes it synchronous
+    request.open("GET", "/static/similarity/stim_lists/setListAttCheck_2a.JSON", false); // `false` makes it synchronous
     request.send(null); // Send the request
 
     if (request.status === 200) {
@@ -114,23 +114,43 @@ function getDataSync(index) {
 // we can now get the specific stim set assigned to the participant's ID
 getDataSync(idInGroup);
 
+// similarly, the FileNameList is loaded
+let fileNameList = {}; 
+
+function getFileNames() {
+    let request = new XMLHttpRequest();
+    // notice that the path to the setListJSON file is here modified from 3 to 2 (the smaller internal test set)
+    request.open("GET", "/static/similarity/stim_file_name_lists/stimuliFileNameList_1.JSON", false); // `false` makes it synchronous
+    request.send(null); // Send the request
+
+    if (request.status === 200) {
+        let data = JSON.parse(request.responseText);
+        fileNameList = data; // Store the needed part
+    } else {
+        console.error("Failed to load JSON file");
+    }
+}
+
+getFileNames();
+
 // logging variables for debugging purposes
-console.log("Participant ID_IN_GROUP:", idInGroup)
+console.log("Participant ID_IN_GROUP:", idInGroup);
 console.log("stim list", stimList);
+console.log("file name list (index test)", fileNameList[0]);
 console.log("stim entry", stimList[idInGroup][0]);
-console.log("round number", roundNumber)
+console.log("round number", roundNumber);
 
-// transforming the stim list into a data base
-function createDatabase(array, condition, expectedRatings = []) {
-  return array.map((number, i) => ({
-    value: number,
-    isAttentionCheck: condition,
-    expectedRating: expectedRatings[i] !== undefined ? expectedRatings[i] : null
-  }));
-};
+// // transforming the stim list into a data base
+// function createDatabase(array, condition, expectedRatings = []) {
+//   return array.map((number, i) => ({
+//     value: number,
+//     isAttentionCheck: condition,
+//     expectedRating: expectedRatings[i] !== undefined ? expectedRatings[i] : null
+//   }));
+// };
 
-let stimListDB = createDatabase(stimList[idInGroup], condition = 'false');
-console.log("stimList DB:", stimListDB);
+// let stimListDB = createDatabase(stimList[idInGroup], condition = 'false');
+// console.log("stimList DB:", stimListDB);
 
 // adding the attention checks
 // we want to add n number of attention checks to our stimListDB without replacing any of the original entries
@@ -139,86 +159,20 @@ console.log("stimList DB:", stimListDB);
 // we can use splice to add the attention checks at random positions without replacing the original entries
 
 // first, defining the attention check array and creating a data base
-const attentionFileNames = ["attention_check_sv.png", 
-"attention_check_ss.png", 
-"attention_check_vv.png", 
-"attention_check_sx.png", 
-"attention_check_xv.png", 
-"attention_check_xx.png"]
+const attentionFileNames = ["high_1.png", 
+"high_2.png", 
+"high_3.png", 
+"low_1.png", 
+"low_2.png", 
+"low_3.png"]
 
-// setting up expected rating ranges for each type of attention check
-// these are quite generous – perhaps they could be a bit more restricted
-const attetionCheckExpectedRanges = ["[0-50]", // sv
-"[50-100]", // ss
-"[50-100]", // vv
-"[0-50]", // sx
-"[0-50]", // xv
-"[50-100]"] // xx
+// // setting up expected rating ranges for each type of attention check
+// // these are quite generous – perhaps they could be a bit more restricted
+// const attetionCheckExpectedRanges = ["[50-100]", "[50-100]", "[50-100]", "[0-50]", "[0-50]", "[0-50]"]
 
-// assembling the data frame (we can notice that all of this could be handled offline . . .)
-let attentionCheckDB = createDatabase(attentionFileNames, condition = 'true', expectedRatings = attetionCheckExpectedRanges);
-console.log("attCheck DB:", attentionCheckDB);
-
-// function to splice the attention check with the stim list at random positions, with three parameters
-
-// defining the function
-function spliceDataframes(db1, db2, extraInsertions, firstCheckLimit, checkDistance) {
-    let result = db1.map(row => ({ ...row })); // Clone db1 safely
-    let attentionChecks = [...db2];
-
-    // Add extras with round-robin
-    for (let i = 0; i < extraInsertions; i++) {
-        attentionChecks.push({ ...db2[i % db2.length] });
-    }
-
-    // Insert attention checks at valid positions
-    for (let check of attentionChecks) {
-        let validPositions = [];
-
-        for (let i = firstCheckLimit; i <= result.length; i++) {
-            // Check if check is too close to another attention check
-            let tooClose = false;
-            for (let offset = -checkDistance; offset <= checkDistance; offset++) {
-                let checkIndex = i + offset;
-                if (
-                    checkIndex >= 0 &&
-                    checkIndex < result.length &&
-                    result[checkIndex]?.isCheck
-                ) {
-                    tooClose = true;
-                    break;
-                }
-            }
-
-            if (!tooClose) validPositions.push(i);
-        }
-
-        if (validPositions.length === 0) {
-            console.warn("No valid insertion spots left!");
-            continue;
-        }
-
-        let insertAt = validPositions[Math.floor(Math.random() * validPositions.length)];
-        result.splice(insertAt, 0, { ...check, isCheck: true });
-    }
-
-    return result;
-};
-
-// combining the stimuli with the attention checks into a single dataframe
-// deciding on parameters
-let extraInsertions = attentionChecksInTotal - attentionCheckDB.length; // notice that this is defined from the python variable!
-let firstCheckLimit = 6;
-let checkDistance = 6;
-
-// running function
-let splicedDF = spliceDataframes(stimListDB, attentionCheckDB, extraInsertions = extraInsertions, firstCheckLimit = firstCheckLimit, checkDistance = checkDistance);
-
-// priting the entire object for debugging:
-console.log("spliced df:", splicedDF);
-
-// we can retrieve information in the following way:
-console.log("index_test:", splicedDF[1].value);
+// // assembling the data frame (we can notice that all of this could be handled offline . . .)
+// let attentionCheckDB = createDatabase(attentionFileNames, condition = 'true', expectedRatings = attetionCheckExpectedRanges);
+// console.log("attCheck DB:", attentionCheckDB);
 
 // computing the final number of drawings to be rated
 let roundFactor = (roundNumber + 1)/2
@@ -243,38 +197,52 @@ let roundSetSize;
         roundSetSize = remainingPairs; // notice that this is directly tied to the size of the stim set
     }
 
-roundSetSize += attentionChecksInTotal; // adding the number of attention checks
 console.log("roundSetSize", roundSetSize);
 
 // Function to construct the stimuli image URL dynamically 
 function getImageUrl(index) {
-    let stimIndex = splicedDF[index-1].value;
-    let attCheckTest = splicedDF[index-1].isAttentionCheck;
+    const stimIndex = stimList[idInGroup][index-1];
+    
+    console.log("stimIndex return", stimIndex);
+    
+    const match = stimIndex.match(/^a([1-6])$/);
+    
+    console.log("match", match);
 
-    if (attCheckTest == 'false') {
+    if (match) {
+        console.log("is attention check");
 
-        return `/static/similarity/images/batch_2/test_pair_${stimIndex}_batch_2.png`;
+        const attCheckIndex = parseInt(match[1], 10); // Extracts the number and turns it into an integer
+        const attCheckFileName = attentionFileNames[attCheckIndex];
+        
+        console.log(attCheckFileName); // Output: "three"
+
+        return `/static/similarity/attention_check_images/${attCheckFileName}`;
         return stimIndex;
 
-    } else if(attCheckTest == 'true') {
+    } else {
+        console.log("is not attention check");
 
-        return `/static/similarity/attention_check_images/${stimIndex}`;
+        const stimFileIndex = parseInt(stimIndex, 10);
+        const stimFileName = fileNameList[stimFileIndex];
+
+        return `/static/similarity/images/batch_3/${stimFileName}`;
         return stimIndex;
     };
 };
 
 // function to load a specific entry of the JSON stimuli file for a particular participant
 function getStimIndex(index) {
-    let stimIndex = splicedDF[index-1].value;
+    let stimIndex = stimList[idInGroup][index-1];
     return stimIndex;
     console.log("actual stimIndex", stimIndex)
 };
 
 // function to load the path of a random attention check image (these could be combined into a single function)
-function getAttentionCheckUrl(randomInteger) {
-    let attentionIndex = splicedDF[index-1].value;
-    return `/static/similarity/attention_check_images/${attentionIndex}`;
-};
+// function getAttentionCheckUrl(randomInteger) {
+//     let attentionIndex = splicedDF[index-1].value;
+//     return `/static/similarity/attention_check_images/${attentionIndex}`;
+// };
 
 // let currentImageIndex = 1;
 let sliderValue = -1; // Initialize the slider value

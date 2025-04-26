@@ -17,11 +17,11 @@ import math
 
 # Parameters that can be modified.
 # Some of these parameters should correspond to the ones in the stimSet gen script
-ratings_pr_drawing = 3 # modified from 7
+ratings_pr_drawing = 7 # modified from 7
 num_participants = 100
-num_total_drawings = 1000 # modified from 4751
+num_total_drawings = 6335
 num_rounds = 3
-num_attention_checks_in_total = 10
+num_attention_checks_in_total = 6
 
 # Parameters that are set automatically based on the above
 num_breaks = num_rounds - 1
