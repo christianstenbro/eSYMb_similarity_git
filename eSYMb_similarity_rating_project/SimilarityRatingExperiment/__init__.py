@@ -17,18 +17,18 @@ import math
 
 # Parameters that can be modified.
 # Some of these parameters should correspond to the ones in the stimSet gen script
-ratings_pr_drawing = 7 # modified from 7
+ratings_pr_drawing = 7
 num_participants = 100
-num_total_drawings = 6335
+num_total_drawings = 1584 + 4750 # drawings from round 1 + 2
 num_rounds = 3
 num_attention_checks_in_total = 6
 
 # Parameters that are set automatically based on the above
 num_breaks = num_rounds - 1
-stim_set_size = math.ceil(num_total_drawings * ratings_pr_drawing / num_participants)
+stim_set_size = math.ceil(num_total_drawings * ratings_pr_drawing / num_participants) + num_attention_checks_in_total
 drawings_pr_round = math.ceil(stim_set_size / num_rounds)
 
-# Setting up classes
+# Setting up classes --> these can be imported into front-end
 class C(BaseConstants):
     NAME_IN_URL = "SimilarityRatingExperiment" 
     PLAYERS_PER_GROUP = None # not relevant to our experiment either, I suppose
@@ -56,6 +56,8 @@ class Player(BasePlayer):
     imageIndices = models.StringField(blank=True)
     stimIndices = models.StringField(blank=True)
     isAttentionCheck = models.StringField(blank=True) # could be a logical binary variable
+    expectedRatingRange = models.StringField(blank=True)
+    originalFileName = models.StringField(blank=True)
     
 # def creating_session(subsession):
 #     subsession.session.vars["memorability_db"] = C.STIM_DB)
@@ -97,7 +99,10 @@ class Rating_modification_round_structure(Page):
     form_model = "player"
     form_fields = ["imageRatings", 
                    "imageIndices",
-                   "stimIndices"]
+                   "stimIndices", 
+                   "isAttentionCheck",
+                   "expectedRatingRange",
+                   "originalFileName"]
 
     @staticmethod # sending variables to the HTML template
     def vars_for_template(player):

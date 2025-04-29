@@ -51,6 +51,10 @@
 			{{ formfield_errors 'imageIndices' }}
 			{{ formfield_errors 'imageRatings' }}
             {{ formfield_errors 'stimIndices' }}
+            {{ formfield_errors 'isAttentionCheck'}}
+            {{ formfield_errors 'expectedRatingRange'}}
+            {{ formfield_errors 'originalFileName'}}
+
         </div>
 
         <br>
@@ -71,6 +75,10 @@
 			<input type="hidden" name="imageIndices" id="imageIndices" />
 			<input type="hidden" name="imageRatings" id="imageRatings" />
             <input type="hidden" name="stimIndices" id="stimIndices" />
+            <input type="hidden" name="isAttentionCheck" id="isAttentionCheck" />
+            <input type="hidden" name="expectedRatingRange" id="expectedRatingRange" />
+            <input type="hidden" name="originalFileName" id="originalFileName" />
+
 		</div>
 
   </div>
@@ -162,9 +170,11 @@ console.log("round number", roundNumber);
 const attentionFileNames = ["high_1.png", 
 "high_2.png", 
 "high_3.png", 
-"low_1.png", 
-"low_2.png", 
-"low_3.png"]
+"low_4.png", 
+"low_5.png", 
+"low_6.png"];
+
+const expectedRatings = ["60-100", "60-100", "60-100", "0-40", "0-40", "0-40"];
 
 // // setting up expected rating ranges for each type of attention check
 // // these are quite generous – perhaps they could be a bit more restricted
@@ -189,13 +199,23 @@ console.log("starting index", currentImageIndex);
 // computing round set size (necessary step since the set sizes vary by 1 entry)
 // this makes sure that the final set is always the true size of the remaining drawings, even when the number
 // of drawings doesn't divide evenly into the number of drawings pr. round
+// let roundSetSize;
+
+//     if (remainingPairs % drawingsPrRound == 0) {
+//         roundSetSize = drawingsPrRound;
+//     } else {
+//         roundSetSize = remainingPairs; // notice that this is directly tied to the size of the stim set
+//     };
+
 let roundSetSize;
 
-    if (remainingPairs % drawingsPrRound == 0) {
-        roundSetSize = drawingsPrRound;
+    if (roundNumber == 1) {
+        roundSetSize = drawingsPrRound; // handles logic for first rating round (round 1) 
+    } else if (roundNumber == 3) {
+        roundSetSize = drawingsPrRound; // handles logic for second rating round (round 3)
     } else {
-        roundSetSize = remainingPairs; // notice that this is directly tied to the size of the stim set
-    }
+        roundSetSize = remainingPairs; // handles logic for third rating round (round 5)
+    };
 
 console.log("roundSetSize", roundSetSize);
 
@@ -212,13 +232,18 @@ function getImageUrl(index) {
     if (match) {
         console.log("is attention check");
 
-        const attCheckIndex = parseInt(match[1], 10); // Extracts the number and turns it into an integer
+        const attCheckIndex = parseInt(match[1], 10) - 1; // Extracts the number and turns it into an integer        
         const attCheckFileName = attentionFileNames[attCheckIndex];
-        
-        console.log(attCheckFileName); // Output: "three"
+        const expectedRating = expectedRatings[attCheckIndex];
 
-        return `/static/similarity/attention_check_images/${attCheckFileName}`;
-        return stimIndex;
+        return {
+            filePath: `/static/similarity/attention_check_images/${attCheckFileName}`,
+            stimIndex: stimIndex,
+            attCheckTest: true,
+            expectedRating: expectedRating, 
+            fileName: attCheckFileName,
+            attCheckIndex: attCheckIndex,
+        }
 
     } else {
         console.log("is not attention check");
@@ -226,8 +251,13 @@ function getImageUrl(index) {
         const stimFileIndex = parseInt(stimIndex, 10);
         const stimFileName = fileNameList[stimFileIndex];
 
-        return `/static/similarity/images/batch_3/${stimFileName}`;
-        return stimIndex;
+        return {
+            filePath: `/static/similarity/images/batch_3/${stimFileName}`,
+            stimIndex: stimIndex,
+            attCheckTest: false,
+            expectedRating: 'null',
+            fileName: stimFileName,
+        } 
     };
 };
 
@@ -238,19 +268,17 @@ function getStimIndex(index) {
     console.log("actual stimIndex", stimIndex)
 };
 
-// function to load the path of a random attention check image (these could be combined into a single function)
-// function getAttentionCheckUrl(randomInteger) {
-//     let attentionIndex = splicedDF[index-1].value;
-//     return `/static/similarity/attention_check_images/${attentionIndex}`;
-// };
-
 // let currentImageIndex = 1;
 let sliderValue = -1; // Initialize the slider value
+let result; // this is a global variable that will be used to store the image file path + result of the 'is attention check test'
 
 // Initializing lists to store variables
 let imageIndices = [];
 let imageRatings = [];
 let stimIndices = [];
+let isAttentionCheck = [];
+let expectedRatingRange = [];
+let originalFileName = [];
 
 // Function to update the displayed slider value
 function updateSliderValue(value) {
@@ -272,11 +300,21 @@ function loadNextImage() {
     imageIndices.push(currentImageIndex);
     imageRatings.push(sliderValue);
     stimIndices.push(stimIndex);
+    isAttentionCheck.push(result.attCheckTest);
+    originalFileName.push(result.fileName);
+    expectedRatingRange.push(result.expectedRating);
+
+    // debugging
+    console.log("can I access this?", result.attCheckTest);
+    console.log("can I access this?", result.attCheckTest);
 
     // Update hidden input fields
     document.getElementById('imageIndices').value = JSON.stringify(imageIndices);
     document.getElementById('imageRatings').value = JSON.stringify(imageRatings);
     document.getElementById('stimIndices').value = JSON.stringify(stimIndices);
+    document.getElementById('isAttentionCheck').value = JSON.stringify(isAttentionCheck);
+    document.getElementById('originalFileName').value = JSON.stringify(originalFileName);
+    document.getElementById('expectedRatingRange').value = JSON.stringify(expectedRatingRange);
 
 	// Adding one to the img idx
     if (currentImageIndex < stimList[idInGroup].length) {
@@ -290,9 +328,11 @@ function loadNextImage() {
 		console.log("data logged");
 	};
 
-    // Construct the next image URL dynamically
-    let nextImageUrl = getImageUrl(currentImageIndex);
-    console.log("currentImageIndex", currentImageIndex)
+    // Construct the next image URL dynamically - this is also an 'isAttentionCheck' test
+    result = getImageUrl(currentImageIndex);
+    let nextImageUrl = result.filePath;
+    console.log("currentImageIndex", currentImageIndex);
+    console.log("nextImageUrl", nextImageUrl)
 
     // Check if the image exists
     let img = new Image();
@@ -321,14 +361,18 @@ function loadNextImage() {
 }
 
 // Load the first image when the page loads - is this also what displays any given image though?
-console.log("roundNumber =", roundNumber)
-console.log("drawingsPrRound =", drawingsPrRound)
+console.log("roundNumber =", roundNumber);
+console.log("drawingsPrRound =", drawingsPrRound);
 
 window.onload = function () {
-    document.getElementById('imagePair').src = getImageUrl(currentImageIndex);
+    // load the first image
+    result = getImageUrl(currentImageIndex);
+    document.getElementById('imagePair').src = result.filePath;
+
     let progress = (imageIndices.length / roundSetSize) * 100;
         document.getElementById('progress-bar').style.width = progress + '%';
         document.getElementById('progress-text').innerText = `${imageIndices.length}/${roundSetSize} images rated in current set`;
+    
 };
 
 // Function to enable button once the slider has been moved
