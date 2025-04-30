@@ -145,7 +145,7 @@ class Rating_practice(Page):
     def vars_for_template(player):
         
         instructions_per_round = {
-            1: 'Rate the similarity:',
+            1: 'How do you rate the similarity of these drawings?',
         }
 
         return {

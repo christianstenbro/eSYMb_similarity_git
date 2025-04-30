@@ -25,10 +25,19 @@
 <div id="wrapper">
 
   <div class="whole delay">
-
-        <p style="text-align: center; font-size: 20px; text-align: center; margin-top: 50px; margin-bottom: 30px;">
-            {{ round_instruction }}
-        </p>
+<!-- instruction element -->
+        <div style="display: flex; justify-content: center; align-items: center;">
+            <p style="text-align: center; 
+            font-size: 27.5px; 
+            text-align: center; 
+            margin-top: 50px; 
+            margin-bottom: 30px; 
+            background-color: lightgray; 
+            padding: 8px 10px;
+            border-radius: 5px;">
+                {{ round_instruction }}
+            </p>
+        </div>
 
         <div id="draw">
             <label>
@@ -38,13 +47,44 @@
         </div> 
         
         <!-- slider input element -->
-        <div style="text-align: center; margin-top: 20px;">
+        <!-- <div style="text-align: center; margin-top: 20px;">
             <div style="display: flex; justify-content: center; align-items: center;">
                 <label for="slider" style="margin-right: 10px;">Similarity:</label>
                 <input type="range" id="slider" name="slider" min="0" max="100" value="50" oninput="updateSliderValue(this.value)" style="width: 300px; height: 20px;">
                 <span id="sliderValue" style="margin-left: 10px;">50</span>
             </div>
+        </div> -->
+
+<!-- slider input element -->
+<div style="text-align: center; margin-top: 20px;">
+    <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+      
+      <!-- LOW label -->
+      <span style="background-color: lightgray; padding: 5px 10px; border-radius: 5px; font-weight: bold;">LOW</span>
+      
+      <!-- Slider and label -->
+    <div style="display: flex; align-items: center;">
+        <!-- <label for="slider" style="margin-right: 10px;">Similarity:</label> -->
+        <input 
+          type="range" 
+          id="slider" 
+          name="slider" 
+          min="0" 
+          max="100" 
+          value="50" 
+          oninput="updateSliderValue(this.value)" 
+          style="width: 300px; height: 20px;"
+        >
+      </div>
+      
+      <!-- HIGH label -->
+      <span style="background-color: lightgray; padding: 5px 10px; border-radius: 5px; font-weight: bold;">HIGH</span>
+  
         </div>
+
+        <span id="sliderValue" style="margin-left: 10px;">50</span>
+
+    </div>
         
         <!-- hidden formfields for storing data -->
         <div id="formfield_errors">
@@ -52,7 +92,7 @@
 			{{ formfield_errors 'imageRatings' }}
             {{ formfield_errors 'stimIndices' }}
             {{ formfield_errors 'isAttentionCheck'}}
-            {{ formfield_errors 'expectedRatingRange'}}
+            {{ formfield_errors 'withinExpectedRatingRange'}}
             {{ formfield_errors 'originalFileName'}}
 
         </div>
@@ -76,7 +116,7 @@
 			<input type="hidden" name="imageRatings" id="imageRatings" />
             <input type="hidden" name="stimIndices" id="stimIndices" />
             <input type="hidden" name="isAttentionCheck" id="isAttentionCheck" />
-            <input type="hidden" name="expectedRatingRange" id="expectedRatingRange" />
+            <input type="hidden" name="withinExpectedRatingRange" id="withinExpectedRatingRange" />
             <input type="hidden" name="originalFileName" id="originalFileName" />
 
 		</div>
@@ -148,24 +188,6 @@ console.log("file name list (index test)", fileNameList[0]);
 console.log("stim entry", stimList[idInGroup][0]);
 console.log("round number", roundNumber);
 
-// // transforming the stim list into a data base
-// function createDatabase(array, condition, expectedRatings = []) {
-//   return array.map((number, i) => ({
-//     value: number,
-//     isAttentionCheck: condition,
-//     expectedRating: expectedRatings[i] !== undefined ? expectedRatings[i] : null
-//   }));
-// };
-
-// let stimListDB = createDatabase(stimList[idInGroup], condition = 'false');
-// console.log("stimList DB:", stimListDB);
-
-// adding the attention checks
-// we want to add n number of attention checks to our stimListDB without replacing any of the original entries
-// we also want this happen on the ?round? or global level – maybe global is ok!
-
-// we can use splice to add the attention checks at random positions without replacing the original entries
-
 // first, defining the attention check array and creating a data base
 const attentionFileNames = ["high_1.png", 
 "high_2.png", 
@@ -174,39 +196,23 @@ const attentionFileNames = ["high_1.png",
 "low_5.png", 
 "low_6.png"];
 
-const expectedRatings = ["60-100", "60-100", "60-100", "0-40", "0-40", "0-40"];
-
-// // setting up expected rating ranges for each type of attention check
-// // these are quite generous – perhaps they could be a bit more restricted
-// const attetionCheckExpectedRanges = ["[50-100]", "[50-100]", "[50-100]", "[0-50]", "[0-50]", "[0-50]"]
-
-// // assembling the data frame (we can notice that all of this could be handled offline . . .)
-// let attentionCheckDB = createDatabase(attentionFileNames, condition = 'true', expectedRatings = attetionCheckExpectedRanges);
-// console.log("attCheck DB:", attentionCheckDB);
+// these are placeholders
+const expectedRatings = ["high", "high", "high", "low", "low", "low"];
 
 // computing the final number of drawings to be rated
-let roundFactor = (roundNumber + 1)/2
+let roundFactor = (roundNumber + 1)/2;
 let ratedImages = drawingsPrRound * (roundFactor-1);
 let remainingPairs = stimList[idInGroup].length - ratedImages;
+let totalPairs = stimList[idInGroup].length;
 
 console.log("Remaining pairs to be rated:", remainingPairs);
-console.log("actual set size:", stimList[idInGroup].length)
+console.log("actual set size:", stimList[idInGroup].length);
 
-// defining the starting index based on the round number
+// defining the starting index based on the round number (this also works as a sort of memory; increasing the index as the round changes)
 let currentImageIndex = (roundFactor-1) * drawingsPrRound + 1; // NOTE! that this is the 'outer-index' - not the index of the actual drawing pair
 console.log("starting index", currentImageIndex);
 
-// computing round set size (necessary step since the set sizes vary by 1 entry)
-// this makes sure that the final set is always the true size of the remaining drawings, even when the number
-// of drawings doesn't divide evenly into the number of drawings pr. round
-// let roundSetSize;
-
-//     if (remainingPairs % drawingsPrRound == 0) {
-//         roundSetSize = drawingsPrRound;
-//     } else {
-//         roundSetSize = remainingPairs; // notice that this is directly tied to the size of the stim set
-//     };
-
+// setting the roundSize
 let roundSetSize;
 
     if (roundNumber == 1) {
@@ -221,16 +227,11 @@ console.log("roundSetSize", roundSetSize);
 
 // Function to construct the stimuli image URL dynamically 
 function getImageUrl(index) {
+    
     const stimIndex = stimList[idInGroup][index-1];
-    
-    console.log("stimIndex return", stimIndex);
-    
     const match = stimIndex.match(/^a([1-6])$/);
-    
-    console.log("match", match);
 
     if (match) {
-        console.log("is attention check");
 
         const attCheckIndex = parseInt(match[1], 10) - 1; // Extracts the number and turns it into an integer        
         const attCheckFileName = attentionFileNames[attCheckIndex];
@@ -246,7 +247,6 @@ function getImageUrl(index) {
         }
 
     } else {
-        console.log("is not attention check");
 
         const stimFileIndex = parseInt(stimIndex, 10);
         const stimFileName = fileNameList[stimFileIndex];
@@ -277,7 +277,7 @@ let imageIndices = [];
 let imageRatings = [];
 let stimIndices = [];
 let isAttentionCheck = [];
-let expectedRatingRange = [];
+let withinExpectedRatingRange = [];
 let originalFileName = [];
 
 // Function to update the displayed slider value
@@ -286,6 +286,28 @@ function updateSliderValue(value) {
     sliderValue = value; // Update the global slider value
     checkSliderValue(value); // Check the slider value to enable/disable the button
     console.log(value);
+}
+
+// Function to test whether the attention check rating is in the desired range
+
+// define expected ratings for attChecks (could be turned into a Otree variable, to be defined in the python script)
+const highRatingThreshold = 60;
+const lowRatingThreshold = 40; 
+
+function attCheckWithinRange() {
+
+    const type = result.expectedRating;
+    const rating = sliderValue;
+
+    let ratingWithinRange;
+
+    if (type === "high") {
+        ratingWithinRange = rating > highRatingThreshold;
+    } else if (type === "low") {
+        ratingWithinRange = rating < lowRatingThreshold;
+    }
+
+    return [ratingWithinRange, type, parseInt(rating, 10)]; // returns a true/false + type indicator + actual rating
 }
 
 // Function to load the next image dynamically and store the data in the array - this is the main function
@@ -302,19 +324,25 @@ function loadNextImage() {
     stimIndices.push(stimIndex);
     isAttentionCheck.push(result.attCheckTest);
     originalFileName.push(result.fileName);
-    expectedRatingRange.push(result.expectedRating);
 
     // debugging
     console.log("can I access this?", result.attCheckTest);
     console.log("can I access this?", result.attCheckTest);
 
-    // Update hidden input fields
+    // Update hidden input fields regardless of stimuli / attention check
     document.getElementById('imageIndices').value = JSON.stringify(imageIndices);
     document.getElementById('imageRatings').value = JSON.stringify(imageRatings);
     document.getElementById('stimIndices').value = JSON.stringify(stimIndices);
     document.getElementById('isAttentionCheck').value = JSON.stringify(isAttentionCheck);
     document.getElementById('originalFileName').value = JSON.stringify(originalFileName);
-    document.getElementById('expectedRatingRange').value = JSON.stringify(expectedRatingRange);
+    
+    // Add the ratingWithinRange variable to Otree if the img is an attention check
+    if (result.attCheckTest) {
+        console.log("checker", attCheckWithinRange());
+        // update the variable and push it to otree
+        withinExpectedRatingRange.push(attCheckWithinRange());
+        document.getElementById('withinExpectedRatingRange').value = JSON.stringify(withinExpectedRatingRange);
+    }
 
 	// Adding one to the img idx
     if (currentImageIndex < stimList[idInGroup].length) {
@@ -354,9 +382,10 @@ function loadNextImage() {
     img.src = nextImageUrl; 
 
     // updating progress bar
-    let progress = (imageIndices.length / roundSetSize) * 100;
+
+    let progress = ((currentImageIndex) / totalPairs) * 100;
         document.getElementById('progress-bar').style.width = progress + '%';
-        document.getElementById('progress-text').innerText = `${imageIndices.length}/${roundSetSize} images rated in current set`;
+        document.getElementById('progress-text').innerText = `Trial ${(currentImageIndex)} of ${totalPairs}`;
 
 }
 
@@ -369,9 +398,9 @@ window.onload = function () {
     result = getImageUrl(currentImageIndex);
     document.getElementById('imagePair').src = result.filePath;
 
-    let progress = (imageIndices.length / roundSetSize) * 100;
+    let progress = ((currentImageIndex) / totalPairs) * 100;
         document.getElementById('progress-bar').style.width = progress + '%';
-        document.getElementById('progress-text').innerText = `${imageIndices.length}/${roundSetSize} images rated in current set`;
+        document.getElementById('progress-text').innerText = `Trial ${(currentImageIndex)} of ${totalPairs}`;
     
 };
 

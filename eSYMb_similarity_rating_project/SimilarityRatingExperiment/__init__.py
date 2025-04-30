@@ -56,7 +56,7 @@ class Player(BasePlayer):
     imageIndices = models.StringField(blank=True)
     stimIndices = models.StringField(blank=True)
     isAttentionCheck = models.StringField(blank=True) # could be a logical binary variable
-    expectedRatingRange = models.StringField(blank=True)
+    withinExpectedRatingRange = models.StringField(blank=True)
     originalFileName = models.StringField(blank=True)
     
 # def creating_session(subsession):
@@ -101,14 +101,14 @@ class Rating_modification_round_structure(Page):
                    "imageIndices",
                    "stimIndices", 
                    "isAttentionCheck",
-                   "expectedRatingRange",
+                   "withinExpectedRatingRange",
                    "originalFileName"]
 
     @staticmethod # sending variables to the HTML template
     def vars_for_template(player):
         
         instructions_per_round = {
-            1: 'Rate the similarity:',
+            1: 'How do you rate the similarity of these drawings?',
         }
 
         return {

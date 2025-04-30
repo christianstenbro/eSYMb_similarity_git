@@ -26,25 +26,66 @@
 
   <div class="whole delay">
 
-        <p style="text-align: center; font-size: 20px; text-align: center; margin-top: 50px; margin-bottom: 30px;">
-            {{ round_instruction }}
-        </p>
+        <!-- instruction element -->
+        <div style="display: flex; justify-content: center; align-items: center;">
+            <p style="text-align: center; 
+            font-size: 27.5px; 
+            text-align: center; 
+            margin-top: 50px; 
+            margin-bottom: 30px; 
+            background-color: lightgray; 
+            padding: 8px 10px;
+            border-radius: 5px;">
+                {{ round_instruction }}
+            </p>
+        </div>
 
         <div id="draw">
             <label>
                 <!-- Adding image for testing; this is overwritten by the JS and is just a placeholder -->
-               <img id="imagePair" src="{{ static 'similarity/images/batch_1/test_pair_1_batch_1.png' }}" alt="Temporary Image" style="width: 100%; max-width: 600px;">
+               <img id="imagePair" src="{{ static 'similarity/practice_images/practice.png' }}" alt="Temporary Image" style="width: 100%; max-width: 600px; padding: 40px;">
             </label>
         </div> 
         
         <!-- Add slider input element -->
-        <div style="text-align: center; margin-top: 20px;">
+        <!-- <div style="text-align: center; margin-top: 20px;">
             <div style="display: flex; justify-content: center; align-items: center;">
                 <label for="slider" style="margin-right: 10px;">Similarity:</label>
                 <input type="range" id="slider" name="slider" min="0" max="100" value="50" oninput="updateSliderValue(this.value)" style="width: 300px; height: 20px;">
                 <span id="sliderValue" style="margin-left: 10px;">50</span>
             </div>
+        </div> -->
+
+<!-- slider input element -->
+<div style="text-align: center; margin-top: 20px;">
+    <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+      
+      <!-- LOW label -->
+      <span style="background-color: lightgray; padding: 5px 10px; border-radius: 5px; font-weight: bold;">LOW</span>
+      
+      <!-- Slider and label -->
+    <div style="display: flex; align-items: center;">
+        <!-- <label for="slider" style="margin-right: 10px;">Similarity:</label> -->
+        <input 
+          type="range" 
+          id="slider" 
+          name="slider" 
+          min="0" 
+          max="100" 
+          value="50" 
+          oninput="updateSliderValue(this.value)" 
+          style="width: 300px; height: 20px;"
+        >
+      </div>
+      
+      <!-- HIGH label -->
+      <span style="background-color: lightgray; padding: 5px 10px; border-radius: 5px; font-weight: bold;">HIGH</span>
+  
         </div>
+
+        <span id="sliderValue" style="margin-left: 10px;">50</span>
+
+    </div>
         
         <!-- Adding hidden formfields for storing data -->
         <div id="formfield_errors">
@@ -61,10 +102,10 @@
         </button>
 
         <!-- Adding progress bar -->
-        <div id="progress-container">
+        <!-- <div id="progress-container">
             <div id="progress-bar"></div>
         </div>
-        <p id="progress-text">0/0 images rated in current set</p>
+        <p id="progress-text">0/0 images rated in current set</p> -->
 
 		<!-- initialising variables to store in Otree dataframe -->
 		<div>
@@ -146,7 +187,7 @@ function getImageUrl(index) {
     //let stimIndex = stimList[idInGroup][index-1]; //the 'key' needs to be the idInGroup; the -1 is due to the 0 indexing of JS
     //console.log(`/static/similarity/images/batch_2/test_pair_${stimIndex}_batch_2.png`);
     //console.log('current stim index =', stimIndex)
-    return `/static/similarity/practice_images/practice_image_stand_in.png`; // this is set to a fixed image in the practice round
+    return `/static/similarity/practice_images/practice.png`; // this is set to a fixed image in the practice round
     //return stimIndex;
 }
 

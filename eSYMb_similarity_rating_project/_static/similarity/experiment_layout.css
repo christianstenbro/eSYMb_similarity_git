@@ -268,7 +268,9 @@
 	position: fixed;
 	bottom: 150px; /* 40px from the top, below the progress bar */
 	left: 50px; /* Align with the progress bar on the right */
-	font-size: 12px; /* Adjust text size */
+	width: 200px;
+	text-align: center;
+	font-size: 16px; /* Adjust text size */
 	margin: 0;
 }
 
