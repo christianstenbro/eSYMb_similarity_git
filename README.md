@@ -6,7 +6,7 @@ GitHub repository for the eSYMb Similarity Rating Experiment
 Currently, the image files are not included in the repository (to make commits more swift). 
 
 I have uploaded a single folder to the OneDrive containing all drawings from study 1, 2 and 3 (called 'all_drawings')
-This folder should be placed inside the '/_static/similarity/images' folder.
+This folder should be placed inside the '/_static/similarity/images' folder. Alternatively, all drawing .png files from the respective study folders can be combined into a new 'all_drawings' folder, to save download time (if you already have the files locally).
 
 To test the project: 
 
