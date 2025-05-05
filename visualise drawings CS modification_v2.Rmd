@@ -22,17 +22,7 @@ pacman::p_load(
 ```
 
 
-
 # 1. Create stimuliFileNameList (no need to run if list already exists)
-
-Comments on the new stimuli:
-
-- There are 1584 files from study 1 and 4751 files from study 3
-(this is one more than expected for study 3)
-
-- This adds up to 6335 files to rate in total
-
-- I have made a copy of the study 1 folder, containing only half of the files (the ones named 'study_1_...') - the other half seemed to be copies (but this should be confirmed).
 
 The script below does the following: 
 
@@ -40,47 +30,50 @@ The script below does the following:
 
 - Saves this list in a JSON format
 
-The files can then be loaded from the Otree experiment based on their index in this JSON file. The benefit of this system is, that we can easily change the stimuli set and that the original file names are preserved.
+The files can then be loaded from the Otree experiment based on their index in this JSON file. The benefit of this system is that we can easily change the stimuli set and that the original file names are preserved.
 
 ```{r}
 # loading the file names from both studies
-study_1_stimuli <- list.files(path = '/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/study1_PNAS_combined_img_only')
-  
-study_3_stimuli <- list.files(path = '/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/study3_3conditions')
+study_1_stimuli <- list.files(path = '/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/new_stimuli_folder/study1_drawings')
+study_2_stimuli <- list.files(path = '/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/new_stimuli_folder/study2_drawings')
+study_3_stimuli <- list.files(path = '/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/new_stimuli_folder/study3_drawings')
+```
 
+```{r}
 # checking lengths
-print(length(study_1_stimuli))
-print(length(study_3_stimuli))
+cat("drawings in study 1:", length(study_1_stimuli))
+cat("\ndrawings in study 2:", length(study_2_stimuli))
+cat("\ndrawings in study 3:", length(study_3_stimuli))
 
+# drawings in total
+cat("\n\ndrawings in total:", (length(c(study_1_stimuli, study_2_stimuli, study_3_stimuli))))
+
+```
+```{r}
 # combining the file names into a single list
-combined_stimuli <- c(study_1_stimuli, study_3_stimuli)
+combined_stimuli <- c(study_1_stimuli, study_2_stimuli, study_3_stimuli)
+length(combined_stimuli)
+```
 
-# checking that lengths align
-length(combined_stimuli) == (length(study_1_stimuli) + length(study_3_stimuli))
-
-print(length(combined_stimuli))
-
+```{r}
 # converting the file name list to a JSON file
 stimuliFileNameList <- jsonlite::toJSON(combined_stimuli, pretty = TRUE)
+```
 
+```{r}
 # saving the JSON file
 path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/stimuliFileNameLists/"
-name = "stimuliFileNameList"
-iteration = "_1"
+name = "stimuliFileNameList_study_1_2_3"
+iteration = "_iteration_1"
 extension = ".JSON"
 write(stimuliFileNameList, file = paste0(path, name, iteration, extension))
 ```
 
-```{r}
-# saving the set
-path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/drawing_lists/"
-name = "setListJSON"
-iteration = "_2"
-extension = ".JSON"
+Comments on the new stimuli:
 
-write(setListJSON, file = paste0(path, name, iteration, extension))
-```
+- There are 1584 files from study 1, and 1452 files from study 2, and 4750 files from study 3.
 
+- This adds up to 7786 files to rate in total (and corresponds with the predicted numbers).
 
 
 # 2. Creating 100 participant rating sets
@@ -95,29 +88,35 @@ Also, it is important to note that the sets are created in a non-deterministic w
 
 ## 2.1 Loading the stimuliFileNameList
 
-The stimuliFileNameList (containing file names from study 1 and 3) is loaded. The list is only used to set a length parameter that will be used in the script to generate the participant rating sets.
+The stimuliFileNameList (containing file names from study 1, 2 and 3) is loaded. The list is only used to set a length parameter that will be used in the script to generate the participant rating sets.
 
 ```{r}
-fileNameList <- jsonlite::read_json('/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/stimuliFileNameLists/stimuliFileNameList_1.JSON', simplifyVector = TRUE) # simplifyVector = true removes unnecessary nesting
+fileNameList <- jsonlite::read_json('/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/stimuliFileNameLists/stimuliFileNameList_study_1_2_3_iteration_1.JSON', simplifyVector = TRUE) # simplifyVector = true removes unnecessary nesting
 
 cat("Number of drawings =", length(fileNameList))
 ```
 
 ## 2.2 Generating 100 subsets from the total number of drawings
 
-Then, the number of participants is decided:
+Then, the number of participants, the ratings_pr_image, and the total drawing number is set. This will determine how the stimuli sets are generated.
 
 ```{r}
 participant_num <- 100
+ratings_pr_image <- 7
+drawingNumber <- length(fileNameList)
+random_seed <- 2025
 ```
 
 Which is used to generate 100 smaller subsets of the entire stimuli set:
 
 ```{r}
-# defining the number of pairs in the entire set
-drawingNumber <- length(fileNameList)
+# setting a seed for reproducibility
+set.seed(random_seed)
 
-pairIndices <- seq(0:(drawingNumber-1)) # notice that this is ZERO-INDEXED to enable JavaScript compatibility 
+# defining the number of pairs in the entire set
+pairIndices <- seq(1:(drawingNumber))-1 
+# Notice that this is ZERO-INDEXED to enable JavaScript compatibility.
+# It is necessary to start with 0 because this 'pairIndices' variable is a list of indices, used to load images from file name lists in JS.
 
 # setting number of divisions (corresponding to number of participants)
 breaks <- participant_num
@@ -147,14 +146,14 @@ for (i in 1:length(smallSets)) {
 sum(unlist(setLength))
 ```
 
-Notice that the split functions creates sets of two different sizes. This is the case since 6335 does not split evenly into a hundred sets. So, some sets will be 64 and some 63. This introduces variation which will be increased further when the small subsets are recombined into the final rating sets.
+Notice that the split functions creates sets of two different sizes. This is the case since the entire set does not split evenly into a hundred subsets. This introduces variation which will be increased further when the small subsets are recombined into the final rating sets.
 
 We can visualize the variation:
 
 ```{r}
 small_set_length_list <- lapply(smallSets, length)
 simplehist(unlist(small_set_length_list),
-           xlab = "number of drawings in the samll sets")
+           xlab = "number of drawings in the small sets")
 ```
 
 ## 2.3 Combining these subsets n times to ensure n number of ratings pr. drawing
@@ -179,7 +178,7 @@ Hence, we want to combine the sets in the following fashion:
 
 ```{r}
 # defining the number of sets to be combined (corresponding to the number of ratings pr. drawing pair)
-n <- 7
+n <- ratings_pr_image
 
 # this is then used to make an offset sequence
 offsets <- seq(0, n-1)
@@ -231,7 +230,7 @@ length(t(filter(unpackedSet, idx == "6000"))) == n
 ```
 
 ```{r}
-# finally, we can visualise the length of each individual rating set to appreciate that there is a bit of variation in the length
+# finally, we can visualize the length of each individual rating set to appreciate that there is a bit of variation in the length:
 length_list <- lapply(setList, length)
 simplehist(unlist(length_list), 
            xlab = "number of drawings in the final rating sets \n(before adding attention checks)")
@@ -283,17 +282,18 @@ This works fine; but the 'after' parameter should be dependent on the value of s
 We could make a list of six indices, that can then be loaded into a loop to indicate the position of the attention check. 
 
 ```{r}
+# setting random seed
+set.seed(random_seed)
+
 # we have the following parameters
 stimuli_set_length <- length(setList[[1]]) # this should be different depending on the actual set list
-
 interval_span <- 20
-
 interval_center <- ceiling(stimuli_set_length / 6)
 
 # we can now sample random positions
 plot(
   sample(( interval_center - interval_span ):( interval_center + interval_span ), 20, replace = TRUE),
-  ylim=c(0,100))
+  ylim=c(0,200))
 ```
 
 ```{r}
@@ -330,7 +330,8 @@ attention_check_names <- c("a1", "a2", "a3", "a4", "a5", "a6")
 Now, this function can be placed inside of the loop that generates the stimuli sets:
 
 ```{r}
-# set parameters
+# set parameters and seed
+set.seed(random_seed)
 interval_span = 10
 
 # creating a new list
@@ -357,6 +358,15 @@ for (i in 1:100) {
 ```
 
 ```{r}
+# visualising lengths of the final ratings sets
+length_list <- lapply(setListAttCheck, length)
+simplehist(unlist(length_list), 
+           xlab = "number of drawings in the final rating sets \n(after adding attention checks)")
+```
+
+# 4. Finalizing JSON file and saving the final list to the drive
+
+```{r}
 # adding indices ('names') to the setList
 names(setListAttCheck) <- as.character(seq_along(setListAttCheck))
 ```
@@ -366,7 +376,7 @@ names(setListAttCheck) <- as.character(seq_along(setListAttCheck))
 setListAttCheckJSON <- jsonlite::toJSON(setListAttCheck, pretty = TRUE)
 
 # checking the data structure
-head(setListAttCheckJSON)
+#setListAttCheckJSON
 ```
 
 We can now save this file to the drive:
@@ -374,80 +384,8 @@ We can now save this file to the drive:
 ```{r}
 path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/drawing_lists/"
 name = "setListAttCheck"
-iteration = "_2a"
+iteration = "_all_studies_1" # please change before running to avoid overwriting existing file
 extension = ".JSON"
 
 write(setListAttCheckJSON, file = paste0(path, name, iteration, extension))
 ```
-
-
-# Drafts and left-overs
-
-<!-- ## Figuring out round structure -->
-
-<!-- ```{r} -->
-<!-- participantStimSetSize <- length(setList[[1]]) -->
-
-<!-- pairsPrRound <- 3 -->
-
-<!-- roundNumber <- ceiling( participantStimSetSize / pairsPrRound ) -->
-
-<!-- cat("Number of rounds =", roundNumber) -->
-<!-- ``` -->
-
-<!-- The above should be embedded directly into the experiment script (in the ____init.py____ file); and should be generated based on the parameters. -->
-
-<!-- Notice that due to the use of the ceiling function, the last round will have fewer pairs. The script should be able to accommodate this.  -->
-
-<!-- ```{r} -->
-<!-- # with the new structure -->
-
-<!-- # defining parameters -->
-<!-- allPairs <- length(t(d1[1])) -->
-<!-- desiredRatingsPrPair <- 7 -->
-<!-- participantNumber <- 100 -->
-
-<!-- allPairs -->
-
-<!-- # computing total number of drawings to rate pr. participant -->
-<!-- participantStimSetSize <- ceiling( allPairs * desiredRatingsPrPair / participantNumber ) -->
-
-<!-- # this should correspond to the size of each subset in the StimSet -->
-<!-- participantStimSetSize == length(setList[[1]]) -->
-
-<!-- # defining number of rounds -->
-<!-- rounds <- 3 -->
-
-<!-- # computing number of drawings to be displayed pr. round -->
-<!-- pairPrRound <- ceiling( participantStimSetSize / rounds ) -->
-
-<!-- cat("PairsPrRound =", pairPrRound, "; Rounds =", rounds) -->
-<!-- ``` -->
-
-<!-- This should be defined in the python file. And then determine settings within the 'Rating' html template. -->
-
-
-<!-- ## Saving the setList as a JSON-file: -->
-
-<!-- ```{r} -->
-<!-- # adding indices ('names') to the setList -->
-<!-- names(setList) <- as.character(seq_along(setList)) -->
-
-<!-- # converting to JSON -->
-<!-- setListJSON <- jsonlite::toJSON(setList, pretty = TRUE) -->
-
-<!-- # checking the data structure -->
-<!-- setListJSON -->
-<!-- ``` -->
-
-<!-- ```{r} -->
-<!-- # saving the set -->
-<!-- path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/drawing_lists/" -->
-<!-- name = "setListJSON" -->
-<!-- iteration = "_2" -->
-<!-- extension = ".JSON" -->
-
-<!-- write(setListJSON, file = paste0(path, name, iteration, extension)) -->
-<!-- ``` -->
-
-<!-- I wonder whether this could be incorporated directly into the Otree experiment . . . in a sense generated live once the session is instantiated. Not sure if this is a more or less complicated solution though. -->

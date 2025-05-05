@@ -16,10 +16,10 @@ import math
 """
 
 # Parameters that can be modified.
-# Some of these parameters should correspond to the ones in the stimSet gen script
+# These parameters should correspond to the ones in the stimSet gen R-script
 ratings_pr_drawing = 7
 num_participants = 100
-num_total_drawings = 1584 + 4750 # drawings from round 1 + 2
+num_total_drawings = 1584+1452+4750 # drawings from study 1, 2 and 3
 num_rounds = 3
 num_attention_checks_in_total = 6
 

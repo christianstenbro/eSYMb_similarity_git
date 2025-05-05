@@ -108,7 +108,7 @@
         <div id="progress-container">
             <div id="progress-bar"></div>
         </div>
-        <p id="progress-text">0/0 images rated in current set</p>
+        <p id="progress-text">Trial n of TOTAL</p>
 
 		<!-- initialising variables to store in Otree dataframe -->
 		<div>
@@ -147,7 +147,7 @@ let stimList = {};
 function getDataSync(index) {
     let request = new XMLHttpRequest();
     // notice that the path to the setListJSON file is here modified from 3 to 2 (the smaller internal test set)
-    request.open("GET", "/static/similarity/stim_lists/setListAttCheck_2a.JSON", false); // `false` makes it synchronous
+    request.open("GET", "/static/similarity/stim_lists/setListAttCheck_all_studies_1.JSON", false); // `false` makes it synchronous
     request.send(null); // Send the request
 
     if (request.status === 200) {
@@ -168,7 +168,7 @@ let fileNameList = {};
 function getFileNames() {
     let request = new XMLHttpRequest();
     // notice that the path to the setListJSON file is here modified from 3 to 2 (the smaller internal test set)
-    request.open("GET", "/static/similarity/stim_file_name_lists/stimuliFileNameList_1.JSON", false); // `false` makes it synchronous
+    request.open("GET", "/static/similarity/stim_file_name_lists/stimuliFileNameList_study_1_2_3_iteration_1.JSON", false); // `false` makes it synchronous
     request.send(null); // Send the request
 
     if (request.status === 200) {
@@ -252,7 +252,7 @@ function getImageUrl(index) {
         const stimFileName = fileNameList[stimFileIndex];
 
         return {
-            filePath: `/static/similarity/images/batch_3/${stimFileName}`,
+            filePath: `/static/similarity/images/all_drawings/${stimFileName}`,
             stimIndex: stimIndex,
             attCheckTest: false,
             expectedRating: 'null',
