@@ -83,7 +83,8 @@
   
         </div>
 
-        <span id="sliderValue" style="margin-left: 10px;">50</span>
+        <!-- Display slider value (hidden) -->    
+        <span id="sliderValue" style="visibility: hidden;"></span>
 
     </div>
         
@@ -136,7 +137,7 @@ let stimList = {};
 function getDataSync(index) {
     let request = new XMLHttpRequest();
     // notice that the path to the setListJSON file is here modified from 3 to 2
-    request.open("GET", "/static/similarity/stim_lists/setListAttCheck_all_studies_1.JSON", false); // `false` makes it synchronous
+    request.open("GET", "/static/similarity/stim_lists/setListAttCheckall_studies_5_ratings.JSON", false); // `false` makes it synchronous
     request.send(null); // Send the request
 
     if (request.status === 200) {
@@ -198,6 +199,7 @@ function getStimIndex(index) {
 
 //let currentImageIndex = 1;
 let sliderValue = -1; // Initialize the slider value
+console.log("sliderValue =", sliderValue);
 
 // Initializing lists to store variables
 let imageIndices = [];
@@ -289,6 +291,20 @@ function checkSliderValue(value) {
 
 // Initial check to disable the "Next" button if the slider value is 0
 document.getElementById("button_next").disabled = true;
+
+// Using the 'enter' key as an alternative to clicking the 'next' button
+document.addEventListener("keydown", function(event) {
+  if (event.key === "Enter") {
+    const slider = document.getElementById('slider');
+    const condition = (slider.value != 50);
+
+    if (condition) {
+      event.preventDefault();
+      document.activeElement.blur();
+      loadNextImage();
+    }
+  }
+});
 
 </script>
 

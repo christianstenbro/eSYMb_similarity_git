@@ -46,15 +46,6 @@
             </label>
         </div> 
         
-        <!-- slider input element -->
-        <!-- <div style="text-align: center; margin-top: 20px;">
-            <div style="display: flex; justify-content: center; align-items: center;">
-                <label for="slider" style="margin-right: 10px;">Similarity:</label>
-                <input type="range" id="slider" name="slider" min="0" max="100" value="50" oninput="updateSliderValue(this.value)" style="width: 300px; height: 20px;">
-                <span id="sliderValue" style="margin-left: 10px;">50</span>
-            </div>
-        </div> -->
-
 <!-- slider input element -->
 <div style="text-align: center; margin-top: 20px;">
     <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
@@ -77,12 +68,13 @@
         >
       </div>
       
-      <!-- HIGH label -->
+      <!-- 'HIGH' label -->
       <span style="background-color: lightgray; padding: 5px 10px; border-radius: 5px; font-weight: bold;">HIGH</span>
   
         </div>
 
-        <span id="sliderValue" style="margin-left: 10px;">50</span>
+        <!-- Display slider value (hidden) -->    
+        <span id="sliderValue" style="visibility: hidden;"></span>
 
     </div>
         
@@ -147,7 +139,7 @@ let stimList = {};
 function getDataSync(index) {
     let request = new XMLHttpRequest();
     // notice that the path to the setListJSON file is here modified from 3 to 2 (the smaller internal test set)
-    request.open("GET", "/static/similarity/stim_lists/setListAttCheck_all_studies_1.JSON", false); // `false` makes it synchronous
+    request.open("GET", "/static/similarity/stim_lists/setListAttCheckall_studies_5_ratings.JSON", false); // `false` makes it synchronous
     request.send(null); // Send the request
 
     if (request.status === 200) {
@@ -167,7 +159,6 @@ let fileNameList = {};
 
 function getFileNames() {
     let request = new XMLHttpRequest();
-    // notice that the path to the setListJSON file is here modified from 3 to 2 (the smaller internal test set)
     request.open("GET", "/static/similarity/stim_file_name_lists/stimuliFileNameList_study_1_2_3_iteration_1.JSON", false); // `false` makes it synchronous
     request.send(null); // Send the request
 
@@ -223,7 +214,7 @@ let roundSetSize;
         roundSetSize = remainingPairs; // handles logic for third rating round (round 5)
     };
 
-console.log("roundSetSize", roundSetSize);
+// console.log("roundSetSize", roundSetSize);
 
 // Function to construct the stimuli image URL dynamically 
 function getImageUrl(index) {
@@ -265,7 +256,6 @@ function getImageUrl(index) {
 function getStimIndex(index) {
     let stimIndex = stimList[idInGroup][index-1];
     return stimIndex;
-    console.log("actual stimIndex", stimIndex)
 };
 
 // let currentImageIndex = 1;
@@ -285,7 +275,6 @@ function updateSliderValue(value) {
     document.getElementById('sliderValue').textContent = value;
     sliderValue = value; // Update the global slider value
     checkSliderValue(value); // Check the slider value to enable/disable the button
-    console.log(value);
 }
 
 // Function to test whether the attention check rating is in the desired range
@@ -316,7 +305,7 @@ function loadNextImage() {
 	
     // fetch the stimIndex from the JSON file
     let stimIndex = getStimIndex(currentImageIndex) // this currentImageIndex matches the entry order in the JSON
-    console.log("stimIndex", stimIndex) // remember; the stimIndex is the actual ID of the drawing in the JSON file
+    // console.log("stimIndex", stimIndex) // remember; the stimIndex is the actual ID of the drawing in the JSON file
 
     // Append current outer image index, stim index, and slider value to the lists
     imageIndices.push(currentImageIndex);
@@ -326,8 +315,8 @@ function loadNextImage() {
     originalFileName.push(result.fileName);
 
     // debugging
-    console.log("can I access this?", result.attCheckTest);
-    console.log("can I access this?", result.attCheckTest);
+    // console.log("can I access this?", result.attCheckTest);
+    // console.log("can I access this?", result.attCheckTest);
 
     // Update hidden input fields regardless of stimuli / attention check
     document.getElementById('imageIndices').value = JSON.stringify(imageIndices);
@@ -338,7 +327,7 @@ function loadNextImage() {
     
     // Add the ratingWithinRange variable to Otree if the img is an attention check
     if (result.attCheckTest) {
-        console.log("checker", attCheckWithinRange());
+        // console.log("checker", attCheckWithinRange());
         // update the variable and push it to otree
         withinExpectedRatingRange.push(attCheckWithinRange());
         document.getElementById('withinExpectedRatingRange').value = JSON.stringify(withinExpectedRatingRange);
@@ -353,14 +342,14 @@ function loadNextImage() {
 	// this also automatically takes us further into the Otree flow (new page or round)
 	if (imageIndices.length == roundSetSize) { //roundSetSize
 		document.forms[0].submit(); // submits data
-		console.log("data logged");
+		// console.log("data logged");
 	};
 
     // Construct the next image URL dynamically - this is also an 'isAttentionCheck' test
     result = getImageUrl(currentImageIndex);
     let nextImageUrl = result.filePath;
-    console.log("currentImageIndex", currentImageIndex);
-    console.log("nextImageUrl", nextImageUrl)
+    // console.log("currentImageIndex", currentImageIndex);
+    // console.log("nextImageUrl", nextImageUrl)
 
     // Check if the image exists
     let img = new Image();
@@ -382,7 +371,6 @@ function loadNextImage() {
     img.src = nextImageUrl; 
 
     // updating progress bar
-
     let progress = ((currentImageIndex) / totalPairs) * 100;
         document.getElementById('progress-bar').style.width = progress + '%';
         document.getElementById('progress-text').innerText = `Trial ${(currentImageIndex)} of ${totalPairs}`;
@@ -390,8 +378,8 @@ function loadNextImage() {
 }
 
 // Load the first image when the page loads - is this also what displays any given image though?
-console.log("roundNumber =", roundNumber);
-console.log("drawingsPrRound =", drawingsPrRound);
+// console.log("roundNumber =", roundNumber);
+// console.log("drawingsPrRound =", drawingsPrRound);
 
 window.onload = function () {
     // load the first image
@@ -414,6 +402,20 @@ function checkSliderValue(value) {
 
 // Initial check to disable the "Next" button at page load
 document.getElementById("button_next").disabled = true;
+
+// Using the 'enter' key as an alternative to clicking the 'next' button
+document.addEventListener("keydown", function(event) {
+  if (event.key === "Enter") {
+    const slider = document.getElementById('slider');
+    const condition = (slider.value != 50);
+
+    if (condition) {
+      event.preventDefault();
+      document.activeElement.blur();
+      loadNextImage();
+    }
+  }
+});
 
 </script>
 

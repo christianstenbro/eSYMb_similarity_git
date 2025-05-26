@@ -6,6 +6,8 @@ output: html_document
 
 # 0. Set-up
 
+This should always be run before running anything else.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -92,7 +94,7 @@ The stimuliFileNameList (containing file names from study 1, 2 and 3) is loaded.
 ```{r}
 fileNameList <- jsonlite::read_json('/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/stimuliFileNameLists/stimuliFileNameList_study_1_2_3_iteration_1.JSON', simplifyVector = TRUE) # simplifyVector = true removes unnecessary nesting
 
-cat("Number of drawings =", length(fileNameList))
+cat("Number of drawings =", length(fileNameList), ";", "\nExpected number of files =", 7786)
 ```
 
 ## 2.2 Generating 100 subsets from the total number of drawings
@@ -100,8 +102,9 @@ cat("Number of drawings =", length(fileNameList))
 Then, the number of participants, the ratings_pr_image, and the total drawing number is set. This will determine how the stimuli sets are generated.
 
 ```{r}
+# parameters
 participant_num <- 100
-ratings_pr_image <- 7
+ratings_pr_image <- 5
 drawingNumber <- length(fileNameList)
 random_seed <- 2025
 ```
@@ -217,6 +220,7 @@ for (i in 1:length(setList)) {
 
 unique(status)
 ```
+The above should look like a solid box with no alterations in the frequency.
 
 ```{r}
 unpackedSet <- tibble(unlist(setList))
@@ -247,39 +251,6 @@ We want to make a tiny script that does the following:
     
     - The four 'middle' attention check position can be randomized to a specific range
     
-With the new stimuli set, the total number pr. participant (with 7 ratings pr. stimuli) is 433.33
-  
-We can use this to find the location of the attention checks. It is important that this is parametric and can change dynamically with for example fewer ratings (resulting in an overall smaller rating set pr. participant).
-
-```{r}
-# testing
-test_list <- c(1,2,3,4,5,6)
-
-test_list <- append(test_list, "att_check_1", after = -0)
-
-test_list
-
-# test 2 - using vectors
-
-test_list2 <- c(1,2,3,4,5,6)
-
-position_list <- c(0, 5)
-
-new_items <- c("test1", "test2")
-
-for (j in 1:2) {
-
-test_list2 <- append(test_list2, new_items[j], after = position_list[j])
-
-}
-
-test_list2
-```
-
-This works fine; but the 'after' parameter should be dependent on the value of some variable. 
-
-We could make a list of six indices, that can then be loaded into a loop to indicate the position of the attention check. 
-
 ```{r}
 # setting random seed
 set.seed(random_seed)
@@ -313,7 +284,7 @@ create_attention_check_index <- function(stimuli_set_length, interval_span) {
 }
 
 # and test it out:
-create_attention_check_index(stimuli_set_length = 434, interval_span = 10)
+create_attention_check_index(stimuli_set_length = length(setList[[1]]), interval_span = 10)
 ```
 
 Next up, we should make some proxy names for the attention check files:
@@ -324,7 +295,6 @@ attention_check_names <- c("a1", "a2", "a3", "a4", "a5", "a6")
 # ideally, we want these shuffled right away as the new set lists are generated
 # perhaps the easiest way to do this is simply to run the shuffle in the 'outer' loop using sample
 ```
-
 
 Now, this function can be placed inside of the loop that generates the stimuli sets:
 
@@ -360,7 +330,7 @@ for (i in 1:100) {
 # visualising lengths of the final ratings sets
 length_list <- lapply(setListAttCheck, length)
 simplehist(unlist(length_list), 
-           xlab = "number of drawings in the final rating sets \n(after adding attention checks)")
+           xlab = "Number of drawings in the final rating sets \n(after adding attention checks)")
 ```
 
 # 4. Finalizing JSON file and saving the final list to the drive
@@ -368,14 +338,9 @@ simplehist(unlist(length_list),
 ```{r}
 # adding indices ('names') to the setList
 names(setListAttCheck) <- as.character(seq_along(setListAttCheck))
-```
 
-```{r}
 # converting to JSON
 setListAttCheckJSON <- jsonlite::toJSON(setListAttCheck, pretty = TRUE)
-
-# checking the data structure
-#setListAttCheckJSON
 ```
 
 We can now save this file to the drive:
@@ -383,7 +348,7 @@ We can now save this file to the drive:
 ```{r}
 path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/drawing_lists/"
 name = "setListAttCheck"
-iteration = "_all_studies_1" # please change before running to avoid overwriting existing file
+iteration = "all_studies_5_ratings" # please change before running to avoid overwriting existing file
 extension = ".JSON"
 
 write(setListAttCheckJSON, file = paste0(path, name, iteration, extension))
