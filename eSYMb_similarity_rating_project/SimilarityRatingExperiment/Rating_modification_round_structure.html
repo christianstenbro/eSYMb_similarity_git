@@ -74,7 +74,7 @@
         </div>
 
         <!-- Display slider value (hidden) -->    
-        <span id="sliderValue" style="visibility: hidden;"></span>
+        <span id="sliderValue" style="visibility: hidden;">50</span>
 
     </div>
         
@@ -96,11 +96,14 @@
             Next
         </button>
 
-        <!-- progress bar -->
-        <div id="progress-container">
-            <div id="progress-bar"></div>
-        </div>
-        <p id="progress-text">Trial n of TOTAL</p>
+        <!-- progress bar (remove) -->
+        <!-- <div id="progress-container"> -->
+            <!-- <div id="progress-bar"></div> -->
+        <!-- </div> -->
+        <p id="progress-text">
+            Block n of 3 <br>
+            Trial i of TOTAL
+        </p>
 
 		<!-- initialising variables to store in Otree dataframe -->
 		<div>
@@ -270,6 +273,9 @@ let isAttentionCheck = [];
 let withinExpectedRatingRange = [];
 let originalFileName = [];
 
+// Initializing new trial-in-block variable
+let trialInBlock = 1;
+
 // Function to update the displayed slider value
 function updateSliderValue(value) {
     document.getElementById('sliderValue').textContent = value;
@@ -314,10 +320,6 @@ function loadNextImage() {
     isAttentionCheck.push(result.attCheckTest);
     originalFileName.push(result.fileName);
 
-    // debugging
-    // console.log("can I access this?", result.attCheckTest);
-    // console.log("can I access this?", result.attCheckTest);
-
     // Update hidden input fields regardless of stimuli / attention check
     document.getElementById('imageIndices').value = JSON.stringify(imageIndices);
     document.getElementById('imageRatings').value = JSON.stringify(imageRatings);
@@ -333,27 +335,27 @@ function loadNextImage() {
         document.getElementById('withinExpectedRatingRange').value = JSON.stringify(withinExpectedRatingRange);
     }
 
-	// Adding one to the img idx
+    // Adding one to the img idx
     if (currentImageIndex < stimList[idInGroup].length) {
 		currentImageIndex++; // Move to the next image
+        trialInBlock++;
 	};
 
 	// Submitting data when the n-th imageRating has been pushed to the list;
 	// this also automatically takes us further into the Otree flow (new page or round)
 	if (imageIndices.length == roundSetSize) { //roundSetSize
 		document.forms[0].submit(); // submits data
-		// console.log("data logged");
+        trialInBlock = 0;
+		console.log("data logged");
+        return;
 	};
 
     // Construct the next image URL dynamically - this is also an 'isAttentionCheck' test
     result = getImageUrl(currentImageIndex);
     let nextImageUrl = result.filePath;
-    // console.log("currentImageIndex", currentImageIndex);
-    // console.log("nextImageUrl", nextImageUrl)
 
     // Check if the image exists
     let img = new Image();
-
     img.onload = function () {
             
         // these are call-backs to the HTML structure in the top of the page
@@ -372,10 +374,10 @@ function loadNextImage() {
 
     // updating progress bar
     let progress = ((currentImageIndex) / totalPairs) * 100;
-        document.getElementById('progress-bar').style.width = progress + '%';
-        document.getElementById('progress-text').innerText = `Trial ${(currentImageIndex)} of ${totalPairs}`;
+        // document.getElementById('progress-bar').style.width = progress + '%';
+        document.getElementById('progress-text').innerText = `Block ${(roundFactor)} of 3\nTrial ${(trialInBlock)} of ${roundSetSize}`;
 
-}
+};
 
 // Load the first image when the page loads - is this also what displays any given image though?
 // console.log("roundNumber =", roundNumber);
@@ -387,9 +389,8 @@ window.onload = function () {
     document.getElementById('imagePair').src = result.filePath;
 
     let progress = ((currentImageIndex) / totalPairs) * 100;
-        document.getElementById('progress-bar').style.width = progress + '%';
-        document.getElementById('progress-text').innerText = `Trial ${(currentImageIndex)} of ${totalPairs}`;
-    
+        // document.getElementById('progress-bar').style.width = progress + '%';
+        document.getElementById('progress-text').innerText = `Block ${(roundFactor)} of 3\nTrial ${(trialInBlock)} of ${roundSetSize}`;
 };
 
 // Function to enable button once the slider has been moved

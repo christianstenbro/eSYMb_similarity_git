@@ -11,21 +11,20 @@
 </style>
 
 <div class="card instructions panel panel-default">
-    <h4 class="card-header">Welcome!</h4>
+    <h4 class="card-header">Instructions</h4>
     <div class="collapse{{ instructions_hidden }}" id="instructionsbody">
       <div class="card card-body">
-
         <p>
-          Please sit comfortably. 
+          Welcome!
         </p>
-        
         <p>
-          This experiment includes N trials and takes about 30 min to complete. <br>
-          Throughout the experiment, you will see simple drawings. <br>
+          Please sit comfortably. <br>
+          This experiment includes around 400 short trials divided into 3 blocks, and it should take about 30 min to complete. 
         </p>
-
-        <p>All drawings are based on the following black line:</p>
-
+        <p>
+         Throughout the experiment, you will see simple drawings which were made by participants in previous experiments. 
+         All drawings are based on a simple black line: 
+        </p>
         <div id="draw" style="display: flex; justify-content: center; margin-bottom: 20px;">
           <label>
              <img id="imagePair" src="{{ static 'similarity/instruction_images/example_1a.png' }}" alt="">
@@ -53,12 +52,15 @@
              <img id="imagePair" src="{{ static 'similarity/instruction_images/example_1c.png' }}" alt="">
           </label>
         </div> 
-
+        <h5>YOUR TASK: </h5>
         <p>
-          Your task is to examine the two drawings and rate their similarity on a scale ranging from <strong>LOW</strong> to <strong>HIGH</strong>.
+          Your task is to examine the two drawings and rate how similar you find them using a sliding scale ranging from <strong>LOW</strong> to <strong>HIGH</strong>.
         </p>
         <p>
-        Click <strong>Next</strong> to proceed with the instructions.
+          You don’t need to think too much about it—just go with your impression or ‘gut feeling’.  
+        </p>
+        <p>
+          Click <strong>Next</strong> to proceed.
         </p>
        
       </div>

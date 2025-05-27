@@ -114,6 +114,9 @@ class Consent_7(ConsentPage):
 class Consent_8(ConsentPage):
     pass
 
+class Consent_9(ConsentPage):
+    pass
+
 # Defining instruction pages
 
 class InstructionPage(Page):
@@ -199,14 +202,15 @@ class Decorate(Page):
         }
     
 page_sequence = [
-    # Consent_1, 
-    # Consent_2, 
-    # Consent_3, 
-    # Consent_4, 
-    # Consent_5, 
-    # Consent_6, 
-    # Consent_7, 
-    # Consent_8,
+    Consent_1, 
+    Consent_2, 
+    Consent_3, 
+    Consent_4, 
+    Consent_5, 
+    Consent_6, 
+    Consent_7, 
+    Consent_8,
+    Consent_9,
     Instruction_1,
     Instruction_2,
     Instruction_3,
