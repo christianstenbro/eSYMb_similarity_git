@@ -134,3 +134,6 @@ DEMO_PAGE_INTRO_HTML = """ """
 SECRET_KEY = environ.get("OTREE_SECRET_KEY")
 if not SECRET_KEY:
     SECRET_KEY = "osderhfo234hr98udfo23hr9pw8h309hp98h"
+
+# remove debug information
+DEBUG = 0 

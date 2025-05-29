@@ -50,19 +50,14 @@ class Group(BaseGroup):
 # this is relevant! Check out the otree documentation for an explanation of the data types
 class Player(BasePlayer):
     prolific_id = models.StringField(default=str("NA"))
-    #playerid = models.IntegerField()
-    # adding new variables for the sim.experiment
     imageRatings = models.StringField(blank=True)
     imageIndices = models.StringField(blank=True)
     stimIndices = models.StringField(blank=True)
-    isAttentionCheck = models.StringField(blank=True) # could be a logical binary variable
+    ratingTimes = models.StringField(blank=True)
+    isAttentionCheck = models.StringField(blank=True)
     withinExpectedRatingRange = models.StringField(blank=True)
     originalFileName = models.StringField(blank=True)
     
-# def creating_session(subsession):
-#     subsession.session.vars["memorability_db"] = C.STIM_DB)
-
-
 # PAGES
 class Introduction(Page):
 
@@ -99,7 +94,8 @@ class Rating_modification_round_structure(Page):
     form_model = "player"
     form_fields = ["imageRatings", 
                    "imageIndices",
-                   "stimIndices", 
+                   "stimIndices",
+                   "ratingTimes", 
                    "isAttentionCheck",
                    "withinExpectedRatingRange",
                    "originalFileName"]

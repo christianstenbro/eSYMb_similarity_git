@@ -24,69 +24,72 @@
 
 <div id="wrapper">
 
-  <div class="whole delay">
-<!-- instruction element -->
-        <div style="display: flex; justify-content: center; align-items: center;">
+  <div class="whole delay" style="margin-top: 25px;">
+
+        <!-- instruction element -->
+        <div id="instruction-box" style="display: flex; justify-content: center; align-items: center;">
             <p style="text-align: center; 
-            font-size: 27.5px; 
-            text-align: center; 
-            margin-top: 50px; 
-            margin-bottom: 30px; 
-            background-color: lightgray; 
-            padding: 8px 10px;
-            border-radius: 5px;">
+                font-size: 27.5px; 
+                margin-top: 50px; 
+                margin-bottom: 30px; 
+                background-color: lightgray; 
+                padding: 8px 10px;
+                border-radius: 5px;
+                width: 600px;            
+                max-width: 90vw;          
+                word-wrap: break-word;">
                 {{ round_instruction }}
             </p>
         </div>
 
-        <div id="draw">
+        <div id="draw" style="margin: 0 auto;">
             <label>
                 <!-- Adding image for testing; this is overwritten by the JS and is just a placeholder -->
-               <img id="imagePair" src="{{ static 'similarity/practice_images/practice.png' }}" alt="Temporary Image" style="width: 100%; max-width: 600px; padding: 40px;">
+               <img id="imagePair" src="{{ static 'similarity/practice_images/practice.png' }}" alt="Temporary Image" style="width: 100%; max-width: 600px; padding: 40px; display: block">
             </label>
         </div> 
         
-<!-- slider input element -->
-<div style="text-align: center; margin-top: 20px;">
-    <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+    <!-- slider input element -->
+    <div style="text-align: center; margin-top: 20px;">
+        <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+        
+        <!-- LOW label -->
+        <span style="background-color: lightgray; padding: 5px 10px; border-radius: 5px; font-weight: bold;">LOW</span>
+        
+        <!-- Slider and label -->
+        <div style="display: flex; align-items: center;">
+            <!-- <label for="slider" style="margin-right: 10px;">Similarity:</label> -->
+            <input 
+            type="range" 
+            id="slider" 
+            name="slider" 
+            min="0" 
+            max="100" 
+            value="50" 
+            oninput="updateSliderValue(this.value)" 
+            style="width: 300px; height: 20px;"
+            >
+        </div>
       
-      <!-- LOW label -->
-      <span style="background-color: lightgray; padding: 5px 10px; border-radius: 5px; font-weight: bold;">LOW</span>
-      
-      <!-- Slider and label -->
-    <div style="display: flex; align-items: center;">
-        <!-- <label for="slider" style="margin-right: 10px;">Similarity:</label> -->
-        <input 
-          type="range" 
-          id="slider" 
-          name="slider" 
-          min="0" 
-          max="100" 
-          value="50" 
-          oninput="updateSliderValue(this.value)" 
-          style="width: 300px; height: 20px;"
-        >
-      </div>
-      
-      <!-- 'HIGH' label -->
-      <span style="background-color: lightgray; padding: 5px 10px; border-radius: 5px; font-weight: bold;">HIGH</span>
+        <!-- 'HIGH' label -->
+        <span style="background-color: lightgray; padding: 5px 10px; border-radius: 5px; font-weight: bold;">HIGH</span>
   
         </div>
 
         <!-- Display slider value (hidden) -->    
         <span id="sliderValue" style="visibility: hidden;">50</span>
 
-    </div>
+        </div>
         
         <!-- hidden formfields for storing data -->
         <div id="formfield_errors">
 			{{ formfield_errors 'imageIndices' }}
 			{{ formfield_errors 'imageRatings' }}
             {{ formfield_errors 'stimIndices' }}
+            {{ formfield_errors 'ratingTimes' }}
             {{ formfield_errors 'isAttentionCheck'}}
             {{ formfield_errors 'withinExpectedRatingRange'}}
             {{ formfield_errors 'originalFileName'}}
-
         </div>
 
         <br>
@@ -96,10 +99,7 @@
             Next
         </button>
 
-        <!-- progress bar (remove) -->
-        <!-- <div id="progress-container"> -->
-            <!-- <div id="progress-bar"></div> -->
-        <!-- </div> -->
+        <!-- progress text -->
         <p id="progress-text">
             Block n of 3 <br>
             Trial i of TOTAL
@@ -110,6 +110,7 @@
 			<input type="hidden" name="imageIndices" id="imageIndices" />
 			<input type="hidden" name="imageRatings" id="imageRatings" />
             <input type="hidden" name="stimIndices" id="stimIndices" />
+            <input type="hidden" name="ratingTimes" id="ratingTimes" />
             <input type="hidden" name="isAttentionCheck" id="isAttentionCheck" />
             <input type="hidden" name="withinExpectedRatingRange" id="withinExpectedRatingRange" />
             <input type="hidden" name="originalFileName" id="originalFileName" />
@@ -121,9 +122,35 @@
 </div>
 
 <!-- JavaScript that loads images, enables ratings, and stores data -->
-<script src="{% static 'similarity/drawing_nomoderation_BTL.js' %}" type="text/javascript"></script>
-
 <script type="text/javascript">
+
+// hides the progressText from beginning
+const progressText = document.getElementById('progress-text');
+progressText.style.display = 'none';
+
+// defining the t0 variable for RT computation
+let t0 = 0;
+
+// setting up a system to detect when the  first image is displayed
+MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+
+var observer = new MutationObserver(function(mutations, observer) {
+    // fires when a mutation occurs
+    // console.log(mutations, observer);
+    console.log("first image appearance detected; RT reset");
+    t0 = performance.now();
+    // shows progress texts as image appears
+    progressText.style.display = '';
+    document.getElementById('progress-text').innerText = `Block ${(roundFactor)} of 3\nTrial ${(trialInBlock)} of ${roundSetSize}`;
+});
+
+// defining the element to be observed by the observer
+const target = document.querySelector('.whole.delay');
+
+// defining the attributes of that element to be observed
+observer.observe(target, {
+    attributes: true
+});
 
 // storing the id_in_group variable from the ____init____.py in a JS variable
 let idInGroup = {{ id_in_group }};
@@ -265,10 +292,11 @@ function getStimIndex(index) {
 let sliderValue = -1; // Initialize the slider value
 let result; // this is a global variable that will be used to store the image file path + result of the 'is attention check test'
 
-// Initializing lists to store variables
+// Initializing lists to store variables that will be sent to the Otree database
 let imageIndices = [];
 let imageRatings = [];
 let stimIndices = [];
+let ratingTimes = [];
 let isAttentionCheck = [];
 let withinExpectedRatingRange = [];
 let originalFileName = [];
@@ -305,10 +333,69 @@ function attCheckWithinRange() {
     return [ratingWithinRange, type, parseInt(rating, 10)]; // returns a true/false + type indicator + actual rating
 }
 
+// function to update instruction text if attention check
+function updateInstruction() {
+
+    const instructionBox = document.getElementById('instruction-box');
+    const paragraph = instructionBox.querySelector('p');
+
+    if (result.attCheckTest && result.expectedRating == 'high') {
+        paragraph.innerText = 'You must rate the similarity of these drawings as extremely high. This is an attention check.';
+    } else if (result.attCheckTest && result.expectedRating == 'low') {
+        paragraph.innerText = 'You must rate the similarity of these drawings as extremely low. This is an attention check.';
+    } else {
+        paragraph.innerText = 'How do you rate the similarity of these drawings?';
+    }
+};
+
+// Load the first image when the page loads
+window.onload = function () {
+
+    // load the first image
+    result = getImageUrl(currentImageIndex);
+    document.getElementById('imagePair').src = result.filePath;
+
+    // reset timer
+    t0 = performance.now();
+
+    updateInstruction();
+};
+
+// Function to enable button once the slider has been moved
+function checkSliderValue(value) {
+	if (value > -1) { // set to -1 to make 0 a useable rating
+		document.getElementById("button_next").disabled = false;
+	} else {
+		document.getElementById("button_next").disabled = true;		}
+} 
+
+// Initial check to disable the "Next" button at page load
+document.getElementById("button_next").disabled = true;
+
+// Using the 'enter' key as an alternative to clicking the 'next' button
+document.addEventListener("keydown", function(event) {
+  if (event.key === "Enter") {
+    const slider = document.getElementById('slider');
+    const condition = (slider.value != 50);
+
+    if (condition) {
+      event.preventDefault();
+      document.activeElement.blur();
+      loadNextImage();
+    }
+  }
+});
+
 // Function to load the next image dynamically and store the data in the array - this is the main function
 // This function also handles the loading of attention checks - currently based on a probability but the condition can be changed
 function loadNextImage() {
-	
+
+    // make a time stamp for computing reaction times
+    let t1 = performance.now();
+    let RT = t1 - t0;
+    console.log(`Rating took ${RT} milliseconds.`);
+    t0 = performance.now(); // reset timer
+
     // fetch the stimIndex from the JSON file
     let stimIndex = getStimIndex(currentImageIndex) // this currentImageIndex matches the entry order in the JSON
     // console.log("stimIndex", stimIndex) // remember; the stimIndex is the actual ID of the drawing in the JSON file
@@ -317,6 +404,7 @@ function loadNextImage() {
     imageIndices.push(currentImageIndex);
     imageRatings.push(sliderValue);
     stimIndices.push(stimIndex);
+    ratingTimes.push(RT);
     isAttentionCheck.push(result.attCheckTest);
     originalFileName.push(result.fileName);
 
@@ -324,6 +412,7 @@ function loadNextImage() {
     document.getElementById('imageIndices').value = JSON.stringify(imageIndices);
     document.getElementById('imageRatings').value = JSON.stringify(imageRatings);
     document.getElementById('stimIndices').value = JSON.stringify(stimIndices);
+    document.getElementById('ratingTimes').value = JSON.stringify(ratingTimes);
     document.getElementById('isAttentionCheck').value = JSON.stringify(isAttentionCheck);
     document.getElementById('originalFileName').value = JSON.stringify(originalFileName);
     
@@ -372,51 +461,15 @@ function loadNextImage() {
     // Trigger loading check
     img.src = nextImageUrl; 
 
+    // Updating instruction text
+    updateInstruction();
+
     // updating progress bar
     let progress = ((currentImageIndex) / totalPairs) * 100;
         // document.getElementById('progress-bar').style.width = progress + '%';
         document.getElementById('progress-text').innerText = `Block ${(roundFactor)} of 3\nTrial ${(trialInBlock)} of ${roundSetSize}`;
 
 };
-
-// Load the first image when the page loads - is this also what displays any given image though?
-// console.log("roundNumber =", roundNumber);
-// console.log("drawingsPrRound =", drawingsPrRound);
-
-window.onload = function () {
-    // load the first image
-    result = getImageUrl(currentImageIndex);
-    document.getElementById('imagePair').src = result.filePath;
-
-    let progress = ((currentImageIndex) / totalPairs) * 100;
-        // document.getElementById('progress-bar').style.width = progress + '%';
-        document.getElementById('progress-text').innerText = `Block ${(roundFactor)} of 3\nTrial ${(trialInBlock)} of ${roundSetSize}`;
-};
-
-// Function to enable button once the slider has been moved
-function checkSliderValue(value) {
-	if (value > -1) { // set to -1 to make 0 a useable rating
-		document.getElementById("button_next").disabled = false;
-	} else {
-		document.getElementById("button_next").disabled = true;		}
-} 
-
-// Initial check to disable the "Next" button at page load
-document.getElementById("button_next").disabled = true;
-
-// Using the 'enter' key as an alternative to clicking the 'next' button
-document.addEventListener("keydown", function(event) {
-  if (event.key === "Enter") {
-    const slider = document.getElementById('slider');
-    const condition = (slider.value != 50);
-
-    if (condition) {
-      event.preventDefault();
-      document.activeElement.blur();
-      loadNextImage();
-    }
-  }
-});
 
 </script>
 
