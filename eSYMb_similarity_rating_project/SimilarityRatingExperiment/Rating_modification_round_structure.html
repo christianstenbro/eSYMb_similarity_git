@@ -137,7 +137,7 @@ MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 var observer = new MutationObserver(function(mutations, observer) {
     // fires when a mutation occurs
     // console.log(mutations, observer);
-    console.log("first image appearance detected; RT reset");
+    // console.log("first image appearance detected; RT reset");
     t0 = performance.now();
     // shows progress texts as image appears
     progressText.style.display = '';
@@ -393,7 +393,7 @@ function loadNextImage() {
     // make a time stamp for computing reaction times
     let t1 = performance.now();
     let RT = t1 - t0;
-    console.log(`Rating took ${RT} milliseconds.`);
+    // console.log(`Rating took ${RT} milliseconds.`);
     t0 = performance.now(); // reset timer
 
     // fetch the stimIndex from the JSON file
