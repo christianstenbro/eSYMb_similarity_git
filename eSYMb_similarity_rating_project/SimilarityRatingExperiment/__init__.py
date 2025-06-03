@@ -104,7 +104,7 @@ class Rating_modification_round_structure(Page):
     def vars_for_template(player):
         
         instructions_per_round = {
-            1: 'How do you rate the similarity of these drawings?',
+            1: 'How do you rate the similarity of these drawings? Mark your response on the scale below.',
         }
 
         return {
