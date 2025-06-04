@@ -340,12 +340,12 @@ function updateInstruction() {
     const paragraph = instructionBox.querySelector('p');
 
     if (result.attCheckTest && result.expectedRating == 'high') {
-        paragraph.innerText = 'You must rate the similarity of these drawings as extremely high. This is an attention check.';
+        paragraph.innerText = 'You must rate the similarity of this pair as extremely high. This is an attention check.';
     } else if (result.attCheckTest && result.expectedRating == 'low') {
-        paragraph.innerText = 'You must rate the similarity of these drawings as extremely low. This is an attention check.';
+        paragraph.innerText = 'You must rate the similarity of this pair as extremely low. This is an attention check.';
     } else {
-        paragraph.innerText = 'How do you rate the similarity of these drawings? Mark your response on the scale below.';
-    }
+        paragraph.innerText = 'How do you rate the similarity of these drawings? Use the scale below to respond.';
+    };
 };
 
 // Load the first image when the page loads
