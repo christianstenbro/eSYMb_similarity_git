@@ -245,14 +245,9 @@
 
 /* Container for the progress bar */
 #progress-container {
-	position: fixed;
-	bottom: 120px; /* 10px from the top of the screen */
-	left: 50px; /* 10px from the right of the screen */
-	width: 200px; /* Set the width of the progress container */
-	height: 15px; /* Height of the progress bar */
-	background-color: #dcdcdc; /* Light gray background */
-	border-radius: 10px; /* Rounded corners */
-	overflow: hidden;
+	display: flex;
+  	justify-content: flex-start;
+  	align-items: flex-end;                    
 }
 
 /* Actual progress bar inside the container */
@@ -265,23 +260,9 @@
 
 /* Progress text styling */
 #progress-text {
-	position: fixed;
-	bottom: 150px; /* 40px from the top, below the progress bar */
-	left: 50px; /* Align with the progress bar on the right */
-	width: 200px;
 	text-align: center;
-	font-size: 16px; /* Adjust text size */
+	font-size: 12px; /* Adjust text size */
 	margin: 0;
-}
-
-#progress-container-2 {
-	position: fixed;
-	bottom: 120px; /* 10px from the top of the screen */
-	left: 260px; /* 10px from the right of the screen */
-	width: 100px; /* Set the width of the progress container */
-	height: 15px; /* Height of the progress bar */
-	background-color: #dcdcdc; /* Light gray background */
-	border-radius: 10px; /* Rounded corners */
 }
 
 /* Actual progress bar inside the container */

@@ -28,15 +28,20 @@
 
         <!-- instruction element -->
         <div id="instruction-box" style="display: flex; justify-content: center; align-items: center;">
-            <p style="text-align: center; 
+            <p style="display: flex; 
+                align-items: center;
+                text-align: center; 
                 font-size: 27.5px; 
+                font-size: clamp(18px, 4vw, 27px);
                 margin-top: 50px; 
                 margin-bottom: 30px; 
                 background-color: lightgray; 
                 padding: 8px 10px;
                 border-radius: 5px;
-                width: 600px;            
-                max-width: 90vw;          
+                width: 600px; 
+                height: 100px;           
+                max-width: 90vw;
+                min-width: 400px;     
                 word-wrap: break-word;">
                 {{ round_instruction }}
             </p>
@@ -100,10 +105,12 @@
         </button>
 
         <!-- progress text -->
-        <p id="progress-text">
-            Block n of 3 <br>
-            Trial i of TOTAL
-        </p>
+        <div id="progress-container">
+            <p id="progress-text" style="background-color: #eee; padding: 5px 10px; border-radius: 5px; width: fit-content;">
+                Block n of 3 <br>
+                Trial i of TOTAL
+            </p>
+        </div>
 
 		<!-- initialising variables to store in Otree dataframe -->
 		<div>
