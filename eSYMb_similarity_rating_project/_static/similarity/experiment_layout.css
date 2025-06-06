@@ -245,40 +245,14 @@
 
 /* Container for the progress bar */
 #progress-container {
-	display: flex;
-  	justify-content: flex-start;
-  	align-items: flex-end;                    
-}
-
-/* Actual progress bar inside the container */
-#progress-bar {
-	height: 100%;
-	width: 0%; /* Initial width (will be updated dynamically) */
-	background-color: #56c65a; /* Green color for the progress bar */
-	border-radius: 2px; /* Rounded corners */
+	position: absolute;             
+	margin-top: 20px;
 }
 
 /* Progress text styling */
 #progress-text {
 	text-align: center;
 	font-size: 12px; /* Adjust text size */
-	margin: 0;
-}
-
-/* Actual progress bar inside the container */
-#progress-bar-2 {
-	height: 100%;
-	width: 0%; 
-	background-color: #fea053; 
-	border-radius: 10px; 
-}
-
-/* Progress text styling */
-#progress-text-2 {
-	position: fixed;
-	bottom: 150px; 
-	left: 260px; 
-	font-size: 12px; 
 	margin: 0;
 }
 

@@ -1,5 +1,5 @@
 {{ block title }}
-<span style="display: none;">Instruction_4</span>
+<span style="display: none;">Instruction_3</span>
 {{ endblock }}
 
 {% block content %}
@@ -11,36 +11,49 @@
 </style>
 
 <div class="card instructions panel panel-default">
-    <h4 class="card-header" style="padding: 10px;">
-      Practice round
-    </h4>
+  <h4 class="card-header">Instructions</h4>
     <div class="collapse{{ instructions_hidden }}" id="instructionsbody">
 
       <div class="card card-body">
-        <p>
-          Before we begin with the experiment, you will go through a practice round. 
-        </p>
-        <p>
-          On the next page you will see a pair of drawings. 
-        </p>
-        <ul>
-          <li>
-            Take a moment to examine the drawings before deciding how similar you find them. 
-            You don’t need to think too much about it—just go with your impression or ‘gut feeling’. 
-          </li>
-          <li>
-            To indicate your response, click and drag the slider below the drawings. 
-          </li>
-          <li>
-            When you are ready to continue, click the ‘Next’ button or hit ‘Enter’ in your keyboard. 
-          </li>
-        </ul>
-
-        <p>
-          Click <strong>Next</strong> to proceed to the practice round.
-        </p>
         
+        <p>
+          Here are further examples:
+        </p>
+
+        <!--list formatting-->
+
+        <div id="draw" style="display: flex; justify-content: center; margin-bottom: 10px; margin-top: 15px;">
+          <ul>
+
+            <li style="display: flex; flex-direction: column; align-items: center; margin-bottom: 40px;"> 
+              <p>In this pair the similarity is relatively <strong>HIGH</strong>:</p>
+              <img id="imagePair" src="{{ static 'similarity/instruction_images/instruction_3a.png' }}" alt="" style="width: 45%; height: auto; border: 2px dotted">
+            </li>
+
+            <li style="display: flex; flex-direction: column; align-items: center; margin-bottom: 40px;"> 
+              <p>In this pair the similarity is <strong>INTERMEDIATE</strong>:</p>
+              <img id="imagePair" src="{{ static 'similarity/instruction_images/instruction_3b.png' }}" alt="" style="width: 45%; height: auto; border: 2px dotted">
+            </li>
+
+            <li style="display: flex; flex-direction: column; align-items: center; margin-bottom: 10px;"> 
+              <p>In this pair the similarity is relatively <strong>LOW</strong>:</p>
+              <img id="imagePair" src="{{ static 'similarity/instruction_images/instruction_3c.png' }}" alt="" style="width: 45%; height: auto; border: 2px dotted">
+            </li>
+
+            <div style = "margin-top: 50px;">
+              <p>
+                Note that all drawing pairs will be relatively similar, but you should try to use the full range of the scale, from LOW to HIGH. 
+              </p>
+            </div>
+          </ul>
+
+        </div> 
+       
       </div>
+
+      <footer class="card-footer" style="display: flex; justify-content: flex-end; padding: 10px;">
+        Click&nbsp;<strong>Next</strong>&nbsp;to proceed.
+      </footer>
 
     </div>
   </div>

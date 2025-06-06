@@ -104,12 +104,6 @@
             Next
         </button>
 
-        <!-- Adding progress bar -->
-        <!-- <div id="progress-container">
-            <div id="progress-bar"></div>
-        </div>
-        <p id="progress-text">0/0 images rated in current set</p> -->
-
 		<!-- initialising variables to store in Otree dataframe -->
 		<div>
 			<input type="hidden" name="imageIndices" id="imageIndices" />
@@ -263,11 +257,6 @@ function loadNextImage() {
 
     img.src = nextImageUrl; // Trigger loading check
 
-    // updating progress bar
-    let progress = (imageIndices.length / roundSetSize) * 100;
-        document.getElementById('progress-bar').style.width = progress + '%';
-        document.getElementById('progress-text').innerText = `${imageIndices.length}/${roundSetSize} images rated in current set`;
-
 }
 
 // Load the first image when the page loads
@@ -278,9 +267,6 @@ window.onload = function () {
     document.getElementById('imagePair').src = getImageUrl(currentImageIndex);
     // --> for the practice round, this can simply be hard-coded to the practice image
     console.log(document.getElementById('imagePair').src = getImageUrl(currentImageIndex));
-    let progress = (imageIndices.length / roundSetSize) * 100;
-        document.getElementById('progress-bar').style.width = progress + '%';
-        document.getElementById('progress-text').innerText = `${imageIndices.length}/${roundSetSize} images rated in current set`;
 };
 
 // Function to enable button once the slider has been moved

@@ -57,6 +57,10 @@ class Player(BasePlayer):
     isAttentionCheck = models.StringField(blank=True)
     withinExpectedRatingRange = models.StringField(blank=True)
     originalFileName = models.StringField(blank=True)
+    technicalIssues = models.StringField(label="Did you encounter any technical issue when doing the experiment? Please let us know so we can address it!", 
+                                         blank=True)
+    dataValidity = models.StringField(label="Is there any reason why we should not use your data?", 
+                                      blank=True)
     
 # PAGES
 class Introduction(Page):
@@ -88,7 +92,6 @@ class AskID(Page):
     @staticmethod
     def is_displayed(player):
         return player.round_number == 1
-
 
 class Rating_modification_round_structure(Page):
     form_model = "player"
@@ -127,6 +130,14 @@ class BreakPage(Page):
         """ Show break after rounds 2 and 4 (but not on the last round) """
         return player.round_number in [2, 4]
 
+class FinalQuestions(Page):
+    form_model = "player"
+    form_fields = ["technicalIssues", 
+                   "dataValidity"]
+    
+    @staticmethod
+    def is_displayed(player):
+        return player.round_number == C.NUM_ROUNDS
 
 class Goodbye(Page):
     form_model = "player"
@@ -141,5 +152,6 @@ page_sequence = [
     Introduction,
     Rating_modification_round_structure,
     BreakPage,
+    FinalQuestions,
     Goodbye,
 ]

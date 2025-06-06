@@ -136,6 +136,9 @@ class Instruction_3(InstructionPage):
 class Instruction_4(InstructionPage):
     pass
 
+class Instruction_5(InstructionPage):
+    pass
+
 # Defining rating practice page
 
 class Rating_practice(Page):
@@ -215,6 +218,7 @@ page_sequence = [
     Instruction_2,
     Instruction_3,
     Instruction_4,
+    Instruction_5,
     Rating_practice,
     #Decorate,
 ]

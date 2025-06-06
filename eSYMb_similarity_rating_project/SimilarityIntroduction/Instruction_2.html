@@ -11,45 +11,31 @@
 </style>
 
 <div class="card instructions panel panel-default">
-  <h4 class="card-header">Instructions</h4>
+    <h4 class="card-header">What is your task?</h4>
     <div class="collapse{{ instructions_hidden }}" id="instructionsbody">
       <div class="card card-body">
-        
+        <h5>YOUR TASK: </h5>
         <p>
-          To help you use the full range of the scale (from LOW to HIGH), we will give you an idea of the range of variation you should expect. 
-          Consider the following illustrative examples.
+          In each trial, you will see two drawings side-by-side. 
+          Here is one example:
         </p>
 
-        <!--list formatting-->
-
-        <div id="draw" style="display: flex; justify-content: center; margin-bottom: 10px; margin-top: 15px;">
-          <ul>
-
-            <li style="display: flex; flex-direction: column; align-items: center; margin-bottom: 40px;"> 
-              <p>In this pair the similarity is relatively <strong>HIGH</strong>:</p>
-              <img id="imagePair" src="{{ static 'similarity/instruction_images/instruction_2a.png' }}" alt="" style="width: 70%; height: auto; border: 2px dotted">
-            </li>
-
-            <li style="display: flex; flex-direction: column; align-items: center; margin-bottom: 40px;"> 
-              <p>In this pair the similarity is <strong>INTERMEDIATE</strong>:</p>
-              <img id="imagePair" src="{{ static 'similarity/instruction_images/instruction_2b.png' }}" alt="" style="width: 70%; height: auto; border: 2px dotted">
-            </li>
-
-            <li style="display: flex; flex-direction: column; align-items: center; margin-bottom: 10px;"> 
-              <p>In this pair the similarity is relatively <strong>LOW</strong>:</p>
-              <img id="imagePair" src="{{ static 'similarity/instruction_images/instruction_2c.png' }}" alt="" style="width: 70%; height: auto; border: 2px dotted">
-            </li>
-
-          </ul>
-
+        <div id="draw" style="display: flex; justify-content: center; margin-bottom: 20px;">
+          <label>
+             <img id="imagePair" src="{{ static 'similarity/instruction_images/example_1c.png' }}" alt="">
+          </label>
         </div> 
-
+        <p>
+          Your task is to examine the two drawings and rate how similar you find them using a sliding scale ranging from <strong>LOW</strong> to <strong>HIGH</strong>.
+        </p>
+        <p>
+          You don’t need to think too much about it—just go with your impression or ‘gut feeling’.  
+        </p>
+        <p>
+          Click <strong>Next</strong> to proceed.
+        </p>
+       
       </div>
-
-      <footer class="card-footer" style="display: flex; justify-content: flex-end; padding: 10px;">
-        Click&nbsp;<strong>Next</strong>&nbsp;to proceed.
-      </footer>
-
     </div>
   </div>
   
