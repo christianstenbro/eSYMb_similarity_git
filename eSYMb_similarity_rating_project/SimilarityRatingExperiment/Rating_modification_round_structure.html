@@ -50,7 +50,7 @@
         <div id="draw" style="margin: 0 auto;">
             <label>
                 <!-- Adding image for testing; this is overwritten by the JS and is just a placeholder -->
-               <img id="imagePair" src="{{ static 'similarity/practice_images/practice.png' }}" alt="Temporary Image" style="width: 100%; max-width: 600px; padding: 40px; display: block">
+               <img id="imagePair" src="{{ static 'similarity/practice_images/practice_1.png' }}" alt="Temporary Image" style="width: 100%; max-width: 600px; padding: 40px; display: block">
             </label>
         </div> 
         
@@ -167,8 +167,8 @@ let roundNumber = {{ round_number }};
 let drawingsPrRound = {{ drawings_pr_round }};
 let attentionChecksInTotal = {{ num_attention_checks_in_total }}
 
-console.log("drawings_pr_round:", drawingsPrRound);
-console.log("attentionChecksInTotal:", attentionChecksInTotal);
+// console.log("drawings_pr_round:", drawingsPrRound);
+// console.log("attentionChecksInTotal:", attentionChecksInTotal);
 
 // function to load the stimuli from the JSON file
 let stimList = {}; 
@@ -210,11 +210,11 @@ function getFileNames() {
 getFileNames();
 
 // logging variables for debugging purposes
-console.log("Participant ID_IN_GROUP:", idInGroup);
-console.log("stim list", stimList);
-console.log("file name list (index test)", fileNameList[0]);
-console.log("stim entry", stimList[idInGroup][0]);
-console.log("round number", roundNumber);
+// console.log("Participant ID_IN_GROUP:", idInGroup);
+// console.log("stim list", stimList);
+// console.log("file name list (index test)", fileNameList[0]);
+// console.log("stim entry", stimList[idInGroup][0]);
+// console.log("round number", roundNumber);
 
 // first, defining the attention check array and creating a data base
 const attentionFileNames = ["high_1.png", 
@@ -233,12 +233,12 @@ let ratedImages = drawingsPrRound * (roundFactor-1);
 let remainingPairs = stimList[idInGroup].length - ratedImages;
 let totalPairs = stimList[idInGroup].length;
 
-console.log("Remaining pairs to be rated:", remainingPairs);
-console.log("actual set size:", stimList[idInGroup].length);
+// console.log("Remaining pairs to be rated:", remainingPairs);
+// console.log("actual set size:", stimList[idInGroup].length);
 
 // defining the starting index based on the round number (this also works as a sort of memory; increasing the index as the round changes)
 let currentImageIndex = (roundFactor-1) * drawingsPrRound + 1; // NOTE! that this is the 'outer-index' - not the index of the actual drawing pair
-console.log("starting index", currentImageIndex);
+// console.log("starting index", currentImageIndex);
 
 // setting the roundSize
 let roundSetSize;
@@ -442,7 +442,7 @@ function loadNextImage() {
 	if (imageIndices.length == roundSetSize) { //roundSetSize
 		document.forms[0].submit(); // submits data
         trialInBlock = 0;
-		console.log("data logged");
+		//console.log("data logged");
         return;
 	};
 

@@ -45,7 +45,7 @@
         <div id="draw">
             <label>
                 <!-- Adding image for testing; this is overwritten by the JS and is just a placeholder -->
-               <img id="imagePair" src="{{ static 'similarity/practice_images/practice.png' }}" alt="Temporary Image" style="width: 100%; max-width: 600px; padding: 40px;">
+               <img id="imagePair" src="{{ static 'similarity/practice_images/practice_1.png' }}" alt="Temporary Image" style="width: 100%; max-width: 600px; padding: 40px;">
             </label>
         </div> 
         
@@ -89,6 +89,13 @@
         <span id="sliderValue" style="visibility: hidden;">50</span>
 
     </div>
+
+        <!-- progress visualiser -->
+        <div id="progress-container">
+            <p id="progress-text" style="background-color: #eee; padding: 5px 10px; border-radius: 5px; width: fit-content;">
+                Trial i of TOTAL
+            </p>
+        </div>
         
         <!-- Adding hidden formfields for storing data -->
         <div id="formfield_errors">
@@ -96,9 +103,7 @@
 			{{ formfield_errors 'imageRatings' }}
             {{ formfield_errors 'stimIndices' }}
         </div>
-
         <br>
-
         <!-- 'Next' button -->
         <button class="otree-btn-next btn btn-primary" id="button_next" type="button" onclick="loadNextImage();" style="float: right;">
             Next
@@ -110,138 +115,87 @@
 			<input type="hidden" name="imageRatings" id="imageRatings" />
             <input type="hidden" name="stimIndices" id="stimIndices" />
 		</div>
-
   </div>
-  
 </div>
-<!-- JavaScript that loads images, enables ratings, and stores data -->
-<script src="{% static 'similarity/drawing_nomoderation_BTL.js' %}" type="text/javascript"></script>
 
+<!-- JavaScript that loads images, enables ratings, and stores data -->
 <script type="text/javascript">
 
-// storing the id_in_group variable from the ____init____.py in a JS variable
-let idInGroup = {{ id_in_group }};
-let roundNumber = {{ round_number }};
+// hides the progressText from beginning
+const progressText = document.getElementById('progress-text');
+progressText.style.display = 'none';
 
-// fetching 'stim_set_size' parameter from the python back-end
-let drawingsPrRound = {{ drawings_pr_round }};
-console.log("drawings_pr_round:", drawingsPrRound);
+var observer = new MutationObserver(function(mutations, observer) {
+    // fires when a mutation occurs
+    // t0 = performance.now(); // activate to record rating time
+    // shows progress texts as image appears
+    progressText.style.display = '';
+    document.getElementById('progress-text').innerText = `Trial ${(currentImageIndex)} of ${practiceRoundSize}`;
+});
 
-// function to load the stimuli from the JSON file
-let stimList = {}; 
+// defining the element to be observed by the observer
+const target = document.querySelector('.whole.delay');
 
-function getDataSync(index) {
-    let request = new XMLHttpRequest();
-    // notice that the path to the setListJSON file is here modified from 3 to 2
-    request.open("GET", "/static/similarity/stim_lists/setListAttCheckall_studies_5_ratings.JSON", false); // `false` makes it synchronous
-    request.send(null); // Send the request
+// defining the attributes of that element to be observed
+observer.observe(target, {
+    attributes: true
+});
 
-    if (request.status === 200) {
-        let data = JSON.parse(request.responseText);
-        let key = index.toString();
-        stimList = { [key] : data[key] }; // Store the needed part
-    } else {
-        console.error("Failed to load JSON file");
-    }
-}
+// number of images to be rated in the practice round
+let practiceRoundSize = 3;
 
-// we can now get the specific stim set assigned to the participant's ID
-getDataSync(idInGroup);
+// defining the starting index
+let currentImageIndex = 1;
 
-// logging variables for debugging purposes
-console.log("Participant ID_IN_GROUP:", idInGroup)
-console.log("stim list", stimList);
-console.log("stim entry", stimList[idInGroup][0]);
-console.log("round number", roundNumber)
-
-// computing the final number of drawings to be rated (only for the final round)
-let roundFactor = (roundNumber + 1)/2
-let ratedImages = drawingsPrRound * (roundFactor-1);
-let remainingPairs = stimList[idInGroup].length - ratedImages;
-
-console.log("Remaining pairs to be rated:", remainingPairs);
-console.log("actual set size:", stimList[idInGroup].length)
-
-// defining the starting index based on the round number
-let currentImageIndex = (roundFactor-1) * drawingsPrRound + 1; // NOTE! that this is the 'outer-index' - not the index of the actual drawing pair
-console.log("starting index", currentImageIndex);
-
-// computing round set size (necessary step since the set sizes vary by 1 entry)
-let roundSetSize;
-
-if (remainingPairs % drawingsPrRound == 0) {
-    roundSetSize = drawingsPrRound;
-} else {
-    roundSetSize = remainingPairs; // notice that this is directly tied to the size of the stim set
-}
-
-console.log("roundSetSize", roundSetSize);
-
-// then, we need to fetch the entry in the stim set corresponding to this value
-
-// Function to construct the image URL dynamically
+// Function to construct the image URL
 function getImageUrl(index) {
-    //let stimIndex = stimList[idInGroup][index-1]; //the 'key' needs to be the idInGroup; the -1 is due to the 0 indexing of JS
-    //console.log(`/static/similarity/images/batch_2/test_pair_${stimIndex}_batch_2.png`);
-    //console.log('current stim index =', stimIndex)
-    return `/static/similarity/practice_images/practice.png`; // this is set to a fixed image in the practice round
-    //return stimIndex;
+    if (index == 1) {
+    return `/static/similarity/practice_images/practice_1.png`; // insert the correct images here
+    } else if (index == 2) {
+        return `/static/similarity/practice_images/practice_2.png`;
+    } else {
+        return `/static/similarity/practice_images/practice_3.png`;
+    };
 }
 
-function getStimIndex(index) {
-    let stimIndex = stimList[idInGroup][index-1];
-    return stimIndex;
-}
-
-//let currentImageIndex = 1;
-let sliderValue = -1; // Initialize the slider value
-console.log("sliderValue =", sliderValue);
+// Initialize the slider value
+let sliderValue = -1; 
 
 // Initializing lists to store variables
 let imageIndices = [];
 let imageRatings = [];
-let stimIndices = [];
 
 // Function to update the displayed slider value
 function updateSliderValue(value) {
     document.getElementById('sliderValue').textContent = value;
-    sliderValue = value; // Update the global slider value
-    checkSliderValue(value); // Check the slider value to enable/disable the button
-    console.log(value);
+    sliderValue = value;
+    checkSliderValue(value);
 }
 
 // Function to load the next image dynamically and store the data in the array
 function loadNextImage() {
 	
-    // fetch the current stimIndex
-    let stimIndex = getStimIndex(currentImageIndex)
-    console.log("stimIndex", stimIndex)
-
     // Append current outer image index, stim index, and slider value to the lists
     imageIndices.push(currentImageIndex);
     imageRatings.push(sliderValue);
-    stimIndices.push(stimIndex);
 
     // Update hidden input fields
     document.getElementById('imageIndices').value = JSON.stringify(imageIndices);
     document.getElementById('imageRatings').value = JSON.stringify(imageRatings);
-    document.getElementById('stimIndices').value = JSON.stringify(stimIndices);
 
 	// Adding one to the img idx
-    if (currentImageIndex < stimList[idInGroup].length) {
+    if (currentImageIndex < practiceRoundSize) {
 		currentImageIndex++; // Move to the next image
 	};
 
 	// Submitting data when the n-th imageRating has been pushed to the list;
-	// this also automatically takes us further into the Otree flow (new page or round?)
-	if (imageIndices.length == roundSetSize) { //roundSetSize
+	if (imageIndices.length == practiceRoundSize) { //roundSetSize
 		document.forms[0].submit(); // submits data
-		console.log("data logged");
+		// console.log("data logged");
 	};
 
     // Construct the next image URL dynamically --> for the practice round, this can simply be hard-coded to the practice image
     let nextImageUrl = getImageUrl(currentImageIndex);
-    console.log("currentImageIndex", currentImageIndex)
 
     // Check if the image exists
     let img = new Image();
@@ -257,15 +211,13 @@ function loadNextImage() {
 
     img.src = nextImageUrl; // Trigger loading check
 
+    // updating progress display
+    document.getElementById('progress-text').innerText = `Trial ${(currentImageIndex)} of ${practiceRoundSize}`;
 }
 
 // Load the first image when the page loads
-console.log("roundNumber =", roundNumber)
-console.log("drawingsPrRound =", drawingsPrRound)
-
 window.onload = function () {
     document.getElementById('imagePair').src = getImageUrl(currentImageIndex);
-    // --> for the practice round, this can simply be hard-coded to the practice image
     console.log(document.getElementById('imagePair').src = getImageUrl(currentImageIndex));
 };
 
