@@ -11,16 +11,26 @@
 </style>
 
 <div class="card instructions panel panel-default">
-    <h4 class="card-header">Type of personal data and when it is deleted/anonymised</h4>
+    <h4 class="card-header">Signing consent</h4>
     <div class="collapse{{ instructions_hidden }}" id="instructionsbody">
         <div class="card card-body">
         <p>
-          This study collects simple demographic information such as age, declared gender, native language(s), and nationality. 
-          We also collect the Prolific ID to ensure data quality. Personal information used for payment is handled by Prolific and is not otherwise collected. 
+          By clicking the <strong>I give my consent</strong> button, I confirm to have received, read and understood the above information and that:
         </p>
+        <ol type="A">
+          <li style="margin-bottom: 15px;">
+            My participation is voluntary, and I may withdraw my consent and discontinue participation in the project at any time by leaving the experiment without completing it. 
+            I may also withdraw my consent later by contacting the research group. 
+          </li>
+          <li style="margin-bottom: 15px;">
+            By signing this agreement, I do not waive any legal rights or release Aarhus University or its agents from liability for negligence. 
+          </li>
+          <li style="margin-bottom: 15px;">
+            I give my consent to participate as a subject in the study and for the researchers to treat my data as described above.
+          </li>
+        </ol>
         <p>
-          The main data from the experiments consist in your responses (ratings), which will be included in subsequent statistical analyses. 
-          The data are collected anonymously, and it will not be possible to identify participants based on the data. 
+          After clicking the button, the experiment will begin.
         </p>
       </div>
       </div>
@@ -28,9 +38,10 @@
   </div>
 
 <br />
-<div style="float: right;">
-{{ next_button }}
-</div>
+
+  <button class="btn btn-primary" style="width: 30%; margin: 0 auto; display: block;">
+    I give my consent
+  </button>
 
 {{ endblock }}
 

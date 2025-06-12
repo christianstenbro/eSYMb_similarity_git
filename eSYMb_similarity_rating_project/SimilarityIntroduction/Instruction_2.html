@@ -14,27 +14,31 @@
     <h4 class="card-header">What is your task?</h4>
     <div class="collapse{{ instructions_hidden }}" id="instructionsbody">
       <div class="card card-body">
-        <h5>YOUR TASK: </h5>
         <p>
-          In each trial, you will see two drawings side-by-side. 
-          Here is one example:
+          In each trial, you will see two drawings displayed side-by-side. Here is one example: 
         </p>
-
-        <div id="draw" style="display: flex; justify-content: center; margin-bottom: 20px;">
+        <div id="draw" style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px;">
           <label>
-             <img id="imagePair" src="{{ static 'similarity/instruction_images/example_1c.png' }}" alt="">
+             <img id="imagePair" src="{{ static 'similarity/instruction_images/two_drawings.png' }}" alt="" style="width: 50%; height: auto; max-width: none; display: block; margin: 0 auto;">
           </label>
         </div> 
         <p>
-          Your task is to examine the two drawings and rate how similar you find them using a sliding scale ranging from <strong>LOW</strong> to <strong>HIGH</strong>.
+          These drawings come from previous experiments in which participants were asked to reproduce drawings from memory. 
+          One drawing is the original, and the other is a copy made from memory. 
+          The two drawings will always share some similarities, but the degree of similarity will vary from trial to trial. 
         </p>
         <p>
-          You don’t need to think too much about it—just go with your impression or ‘gut feeling’.  
+          <u><strong>YOUR TASK</strong> is to rate how similar you find the two drawings, using a sliding scale that ranges from LOW to HIGH.</u>
         </p>
+        <ul>
+          <li>A HIGH rating means that the drawings look almost identical.</li>
+          <li>A LOW rating means that there are noticeable differences between them.</li>
+        </ul>
         <p>
-          Click <strong>Next</strong> to proceed.
-        </p>
-       
+          Please try to use the scale consistently throughout the experiment. 
+          That is, drawing pairs that seem equally similar should receive approximately the same rating. 
+          Don’t overthink it—just go with your first impression or gut feeling.   
+        </p>       
       </div>
     </div>
   </div>
