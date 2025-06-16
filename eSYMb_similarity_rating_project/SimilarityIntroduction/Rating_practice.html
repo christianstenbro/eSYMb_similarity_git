@@ -141,22 +141,57 @@ observer.observe(target, {
     attributes: true
 });
 
+// loading the study number
+studyNumber = {{ session.config.study_number }};
+console.log("Study number = ", studyNumber);
+
 // number of images to be rated in the practice round
 let practiceRoundSize = 3;
 
 // defining the starting index
 let currentImageIndex = 1;
 
-// Function to construct the image URL
-function getImageUrl(index) {
-    if (index == 1) {
-    return `/static/similarity/practice_images/practice_1.png`; // insert the correct images here
-    } else if (index == 2) {
-        return `/static/similarity/practice_images/practice_2.png`;
+// fetching the file name list for the selected study number
+let fileNameList = {}; 
+
+function getFileNames() {
+    let request = new XMLHttpRequest();
+    request.open("GET", `/static/similarity/stim_file_name_lists/stim_file_name_list_study_${studyNumber}_iteration_1.JSON`, false); // `false` makes it synchronous
+    request.send(null); // Send the request
+
+    if (request.status === 200) {
+        let data = JSON.parse(request.responseText);
+        fileNameList = data; // Store the needed part
     } else {
-        return `/static/similarity/practice_images/practice_3.png`;
-    };
+        console.error("Failed to load JSON file");
+    }
 }
+getFileNames();
+
+// constructing three random image URLs
+function sampleWithoutReplacement(arr, n) {
+  const result = arr.slice(); 
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1)); 
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result.slice(0, n);
+}
+
+// fetching 3 random files from the fileNameList
+const fileListSample = sampleWithoutReplacement(fileNameList, 3);
+
+// function to construct the image URL
+function getImageUrl(index) {
+    switch (index) {
+        case 1: 
+            return `/static/similarity/images/all_drawings/${fileListSample[0]}`;
+        case 2:
+            return `/static/similarity/images/all_drawings/${fileListSample[1]}`;
+        case 3:
+            return `/static/similarity/images/all_drawings/${fileListSample[2]}`;
+    };
+};
 
 // Initialize the slider value
 let sliderValue = -1; 

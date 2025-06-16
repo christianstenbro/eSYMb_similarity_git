@@ -135,7 +135,7 @@
 const progressText = document.getElementById('progress-text');
 progressText.style.display = 'none';
 
-// defining the t0 variable for RT computation
+// defining the t0 variable for RatingTime computation
 let t0 = 0;
 
 // setting up a system to detect when the  first image is displayed
@@ -163,12 +163,36 @@ observer.observe(target, {
 let idInGroup = {{ id_in_group }};
 let roundNumber = {{ round_number }};
 
-// importing parameters from the python back-end
-let drawingsPrRound = {{ drawings_pr_round }};
-let attentionChecksInTotal = {{ num_attention_checks_in_total }}
+// defining number of drawings based on the study number 
+const studyNumber = {{ session.config.study_number }};
+console.log("Fetched study number = ", studyNumber);    
 
-// console.log("drawings_pr_round:", drawingsPrRound);
-// console.log("attentionChecksInTotal:", attentionChecksInTotal);
+const ratings_pr_drawing = 5;
+const num_rounds = 3;
+const num_attention_checks_in_total = 6;
+
+let num_participants; //updates
+let num_total_drawings; //updates
+
+switch (studyNumber) {
+    case 1:
+        num_participants = 30;
+        num_total_drawings = 1584; 
+        break;
+    case 2:
+        num_participants = 30;
+        num_total_drawings = 1452;
+        break;
+    case 3:
+        num_participants = 60;
+        num_total_drawings = 4750;
+        break;
+};
+
+// computing number of drawings based on the above variables
+let stim_set_size = Math.ceil(num_total_drawings * ratings_pr_drawing / num_participants) + num_attention_checks_in_total;
+let drawingsPrRound = Math.ceil(stim_set_size / num_rounds);
+let attentionChecksInTotal = num_attention_checks_in_total;
 
 // function to load the stimuli from the JSON file
 let stimList = {}; 
@@ -176,7 +200,7 @@ let stimList = {};
 function getDataSync(index) {
     let request = new XMLHttpRequest();
     // notice that the path to the setListJSON file is here modified from 3 to 2 (the smaller internal test set)
-    request.open("GET", "/static/similarity/stim_lists/setListAttCheckall_studies_5_ratings.JSON", false); // `false` makes it synchronous
+    request.open("GET", `/static/similarity/stim_lists/new_stim_list_study_${studyNumber}_5_ratings.JSON`, false); // `false` makes it synchronous
     request.send(null); // Send the request
 
     if (request.status === 200) {
@@ -196,7 +220,7 @@ let fileNameList = {};
 
 function getFileNames() {
     let request = new XMLHttpRequest();
-    request.open("GET", "/static/similarity/stim_file_name_lists/stimuliFileNameList_study_1_2_3_iteration_1.JSON", false); // `false` makes it synchronous
+    request.open("GET", `/static/similarity/stim_file_name_lists/stim_file_name_list_study_${studyNumber}_iteration_1.JSON`, false); // `false` makes it synchronous
     request.send(null); // Send the request
 
     if (request.status === 200) {
@@ -210,13 +234,15 @@ function getFileNames() {
 getFileNames();
 
 // logging variables for debugging purposes
-// console.log("Participant ID_IN_GROUP:", idInGroup);
-// console.log("stim list", stimList);
-// console.log("file name list (index test)", fileNameList[0]);
-// console.log("stim entry", stimList[idInGroup][0]);
-// console.log("round number", roundNumber);
+console.log("drawings_pr_round:", drawingsPrRound);
+console.log("attentionChecksInTotal:", attentionChecksInTotal);
+console.log("participants = ", num_participants, ", total drawings = ", num_total_drawings, ", stimSetSize = ", stimList[idInGroup].length);
+console.log("Participant ID_IN_GROUP:", idInGroup);
+console.log("stim list", stimList);
+console.log("file name list (index test)", fileNameList[0]);
+console.log("stim entry", stimList[idInGroup][0]);
 
-// first, defining the attention check array and creating a data base
+// defining attention check array and creating a data base
 const attentionFileNames = ["high_1.png", 
 "high_2.png", 
 "high_3.png", 

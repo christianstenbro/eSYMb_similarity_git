@@ -1,5 +1,5 @@
 {{ block title }}
-<span style="display: none;">Instruction_3</span>
+<span style="display: none;">Instruction_4</span>
 {{ endblock }}
 
 {% block content %}
@@ -21,15 +21,15 @@
           <ul>
             <li style="display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;"> 
               <p>In this pair the similarity is relatively <strong>HIGH</strong>:</p>
-              <img id="imagePair" src="{{ static 'similarity/instruction_images/instruction_4_high.png' }}" alt="" style="width: 300px; height: auto; border: 0px dotted">
+              <img id="imagePair_2_high" src="{{ static 'similarity/instruction_images/instruction_4_high.png' }}" alt="" style="width: 300px; height: auto; border: 0px dotted">
             </li>
             <li style="display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;"> 
               <p>In this pair the similarity is <strong>INTERMEDIATE</strong>:</p>
-              <img id="imagePair" src="{{ static 'similarity/instruction_images/instruction_4_intermediate.png' }}" alt="" style="width: 300px; height: auto; border: 0px dotted">
+              <img id="imagePair_2_intermediate" src="{{ static 'similarity/instruction_images/instruction_4_intermediate.png' }}" alt="" style="width: 300px; height: auto; border: 0px dotted">
             </li>
             <li style="display: flex; flex-direction: column; align-items: center; margin-bottom: 0px;"> 
               <p>In this pair the similarity is relatively <strong>LOW</strong>:</p>
-              <img id="imagePair" src="{{ static 'similarity/instruction_images/instruction_4_low.png' }}" alt="" style="width: 300px; height: auto; border: 0px dotted">
+              <img id="imagePair_2_low" src="{{ static 'similarity/instruction_images/instruction_4_low.png' }}" alt="" style="width: 300px; height: auto; border: 0px dotted">
             </li>
           </ul>
         </div> 
@@ -44,6 +44,25 @@
 <div style="float: right;">
 {{ next_button }}
 </div>
+
+<!-- script to load different example images based on study number -->
+<script type="text/javascript">
+
+// fetching the study number from the session configurations
+studyNumber = {{ session.config.study_number }};
+console.log("Study number = ", studyNumber);
+
+// constructing image path based on study number
+folderName = `study_${studyNumber}_examples`;
+staticRoot = "/static/similarity/instruction_images/";
+imgPath = `${staticRoot}${folderName}`;
+
+// replacing images
+document.getElementById("imagePair_2_high").src=`${imgPath}/high_2.png`;
+document.getElementById("imagePair_2_intermediate").src=`${imgPath}/intermediate_2.png`;
+document.getElementById("imagePair_2_low").src=`${imgPath}/low_2.png`;
+
+</script>
 
 {{ endblock }}
 

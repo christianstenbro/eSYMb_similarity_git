@@ -68,6 +68,7 @@ SESSION_CONFIGS = [
             "SimilarityIntroduction", 
             "SimilarityRatingExperiment"],
         num_demo_participants=10,
+        study_number=1,
     ),
     # dict(
     #     name="dothraki",
@@ -135,5 +136,5 @@ SECRET_KEY = environ.get("OTREE_SECRET_KEY")
 if not SECRET_KEY:
     SECRET_KEY = "osderhfo234hr98udfo23hr9pw8h309hp98h"
 
-# remove debug information
-DEBUG = 0 
+# remove debug information = 0
+DEBUG = 1

@@ -1,0 +1,394 @@
+---
+title: "Generate stimuli lists"
+date: "2025-06-15"
+output: html_document
+---
+
+# 0. Set-up
+
+This should always be run before running anything else.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# always run this chunk before anything else
+pacman::p_load(
+  tidyverse,
+  base64enc,
+  imager,
+  magick,
+  ggplot2, 
+  rethinking)
+```
+
+
+# 1. Create stimuliFileNameList (no need to run if list already exists)
+
+The script below does the following: 
+
+- Loads all file names into a combined list
+
+- Saves this list in a JSON format
+
+The files can then be loaded from the Otree experiment based on their index in this JSON file. The benefit of this system is that we can easily change the stimuli set and that the original file names are preserved.
+
+```{r}
+# loading the file names from both studies
+study_1_stimuli <- list.files(path = '/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/new_stimuli_folder/study1_drawings')
+study_2_stimuli <- list.files(path = '/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/new_stimuli_folder/study2_drawings')
+study_3_stimuli <- list.files(path = '/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/new_stimuli_folder/study3_drawings')
+```
+
+```{r}
+# checking lengths
+cat("drawings in study 1:", length(study_1_stimuli))
+cat("\ndrawings in study 2:", length(study_2_stimuli))
+cat("\ndrawings in study 3:", length(study_3_stimuli))
+```
+
+```{r}
+# converting the file name lists to JSON files
+stimuliFileNameListStudy1 <- jsonlite::toJSON(study_1_stimuli, pretty = TRUE)
+stimuliFileNameListStudy2 <- jsonlite::toJSON(study_2_stimuli, pretty = TRUE)
+stimuliFileNameListStudy3 <- jsonlite::toJSON(study_3_stimuli, pretty = TRUE)
+```
+
+```{r}
+# saving the JSON files
+save_stim_list <- function(stim_file_name_list, name, study, iteration) {
+  path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/stimuliFileNameLists/"
+  extension = ".JSON"
+  write(stim_file_name_list, file = paste0(path, name, "_study_", study, "_", iteration, extension))
+}
+
+# study 1
+save_stim_list(stim_file_name_list = stimuliFileNameListStudy1,
+               name = "stim_file_name_list",
+               study = 1, 
+               iteration = "iteration_1")
+
+# study 2
+save_stim_list(stim_file_name_list = stimuliFileNameListStudy2,
+               name = "stim_file_name_list",
+               study = 2, 
+               iteration = "iteration_1")
+
+# study 3
+save_stim_list(stim_file_name_list = stimuliFileNameListStudy3,
+               name = "stim_file_name_list",
+               study = 3, 
+               iteration = "iteration_1")
+```
+
+Comments on the new stimuli:
+
+- There are 1584 files from study 1, and 1452 files from study 2, and 4750 files from study 3.
+
+- This adds up to 7786 files to rate in total (and corresponds with the predicted numbers).
+
+
+# 2. Creating 100 participant rating sets
+
+Comments:
+
+The following scripts creates nested JSON files with n different stimuli lists, that can be used in Otree to load the specified files.
+
+These stimuli lists are created in a way that ensures that (1) each list is unique and (2) no single drawing appears more than a single time within the set to be rated by the same participant.
+
+Also, it is important to note that the sets are created in a non-deterministic way; hence, it is important to save created sets with a unique iteration number, as they will not be reproducible without a fixed random seed.
+
+## 2.1 Loading the stimuliFileNameList
+
+The stimuliFileNameList (containing file names from study 1, 2 and 3) is loaded. The list is only used to set a length parameter that will be used in the script to generate the participant rating sets.
+
+```{r}
+fileNameList <- jsonlite::read_json('/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/stimuliFileNameLists/stimuliFileNameList_study_1_2_3_iteration_1.JSON', simplifyVector = TRUE) # simplifyVector = true removes unnecessary nesting
+
+cat("Number of drawings =", length(fileNameList), ";", "\nExpected number of files =", 7786)
+```
+
+# 3. Defining names and functions
+
+```{r}
+# A function that creates a list of indices corresponding to each drawing pair in a given study; then splits these into n random subsets where n = the number of participants; finally multiplies these sets by the number of ratings pr. image and recombines them systematically to make sure each drawing is rated the correct number of times.
+
+create_random_subsets <- function(participant_num, ratings_pr_image, drawingNumber, random_seed) {
+  
+  # setting a seed for reproducibility
+  set.seed(random_seed)
+  
+  # defining the number of pairs in the entire set
+  pairIndices <- seq(1:(drawingNumber))-1 
+  # Notice that this is ZERO-INDEXED to enable JavaScript compatibility.
+  # It is necessary to start with 0 because this 'pairIndices' variable is a list of indices, used to load images from file name lists in JS.
+  
+  # setting number of divisions (corresponding to number of participants)
+  breaks <- participant_num
+  
+  # creating ordered index
+  sampleIdx <- cut(pairIndices, breaks = breaks, labels = FALSE)
+  
+  # scramble the index
+  sampleIdx <- sample(sampleIdx)
+  
+  # splitting the set
+  smallSets <- split(pairIndices, sampleIdx)
+  
+  # shuffling the order of integers within each set
+  smallSets <- lapply(smallSets, sample)
+  
+  n <- ratings_pr_image
+
+  # this is then used to make an offset sequence
+  offsets <- seq(0, n-1)
+  
+  # setting up empty list
+  setList <- list()
+  
+  # looping through the small sets and combining them according to the specified structure
+    for (i in 1:participant_num) {
+      setList[[i]] <- unlist( lapply( 
+        offsets, function( x ) smallSets[[( i - 1 + x ) %% participant_num + 1]] # computes indices of small sets as a function of the offset parameter
+        ) )
+    }
+
+  # randomizing order of entries within each list of drawing pair indices (to make sure no participant is presented with similar orders of drawings)
+  setList <- lapply(setList, sample)
+  
+  return(setList)
+  
+}
+```
+
+```{r}
+# Function to insert attention checks into stimuli sets. 
+# An attention check is always appended to the last and first position of the stimuli list. The position of the remaining four checks is randomly sampled from equally spaced intervals, whose width is defined via the interval_span variable.
+
+create_attention_check_index <- function(stimuli_set_length, interval_span) {
+  
+  interval_center <- ceiling(stimuli_set_length / 6);
+  
+  att_check_position_list <- c(stimuli_set_length, 
+                             sample((interval_center*4 - interval_span ):( interval_center*4 + interval_span ), 1), 
+                             sample((interval_center*3 - interval_span ):( interval_center*3 + interval_span ), 1), 
+                             sample((interval_center*2 - interval_span ):( interval_center*2 + interval_span ), 1), 
+                             sample((interval_center*1 - interval_span ):( interval_center*1 + interval_span ), 1), 
+                             0); # this has to be in reversed order as the set will keep growing as we add new entries
+  
+  return(att_check_position_list);
+}
+```
+
+```{r}
+# Defining attention check proxy names
+attention_check_names <- c("a1", "a2", "a3", "a4", "a5", "a6")
+```
+
+```{r}
+# A function that appends the attention check indices to the the stimuli list
+append_attention_checks <- function(stimuli_set_list, interval_span = 10, random_seed) {
+
+  # creating a new list
+  setListAttCheck <- list()
+  
+  # defining variables
+  n = length(stimuli_set_list) # corresponds to the participant number
+  
+  # looping through the old set lists to add attention checks
+  for (i in 1:n) {
+    
+    setList <- stimuli_set_list;
+    x <- setList[[i]];
+    shuffled_att_check_names <- sample(attention_check_names);
+    att_check_index_list <- create_attention_check_index(stimuli_set_length = length(setList[[i]]), 
+                               interval_span = interval_span);
+    for (j in 1:6) {
+      x <- append(x, shuffled_att_check_names[j], after = att_check_index_list[j]);
+    }
+    setListAttCheck[[i]] <- x;
+  }
+  return(setListAttCheck);
+}
+```
+
+```{r}
+# A function to finalize the set as a JSON file and save it in a specified location
+
+finalize_set <- function(set_list_with_checks, path, file_name, study_nr, number_of_ratings) {
+  
+  # adding indices ('names') to the setList
+  names(set_list_with_checks) <- as.character(seq_along(set_list_with_checks))
+  
+  # converting to JSON
+  setListAttCheckJSON <- jsonlite::toJSON(set_list_with_checks, pretty = TRUE)
+  
+  # saving to the drive
+  iteration = paste0("_study_", study_nr, "_", number_of_ratings, "_ratings") # please change before running to avoid overwriting existing file
+  extension = ".JSON"
+  
+  write(setListAttCheckJSON, file = paste0(path, file_name, iteration, extension))
+
+}
+```
+
+# 4. Making stimuli sets
+
+Then, the number of participants, the ratings_pr_image, and the total drawing number is set. This will determine how the stimuli sets are generated.
+
+Drawings from the different studies are distributed between participants in the following way: 
+
+Study 1: 30 participants
+Study 2: 30 participants
+Study 3: 60 participants
+
+## 4.1 Making a set for study 1
+
+```{r}
+# creating stimuli set for study 1
+setList1 <- create_random_subsets(participant_num = 30,
+                      ratings_pr_image = 5,
+                      drawingNumber = length(study_1_stimuli),
+                      random_seed = 2025)
+```
+
+```{r}
+# visualising to check that each pair appears n times across all lists
+simplehist(unlist(setList1))
+unique(table(unlist(setList1)))
+
+# checking that none of the lists has any repeating pairs
+status <- list()
+
+for (i in 1:length(setList1)) {
+  status[i] <- (length(unique(setList1[[i]])) == length(setList1[[i]]))
+  }
+
+unique(status) # this should be TRUE
+```
+
+```{r}
+# adding attention checks
+setListTestAttentionChecks1 <- append_attention_checks(stimuli_set_list = setList1,
+                                                      interval_span = 10,
+                                                      random_seed = 2025)
+```
+
+```{r}
+finalize_set(set_list_with_checks = setListTestAttentionChecks1,
+             path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/drawing_lists/",
+             file_name = "new_stim_list",
+             study_nr = 1,
+             number_of_ratings = 5)
+```
+
+## 3.2 Making a set for study 2
+
+```{r}
+# creating stimuli set for study 2
+setList2 <- create_random_subsets(participant_num = 30,
+                      ratings_pr_image = 5,
+                      drawingNumber = length(study_2_stimuli),
+                      random_seed = 2025)
+```
+
+```{r}
+# visualising to check that each pair appears n times across all lists
+simplehist(unlist(setList2))
+unique(table(unlist(setList2)))
+
+# checking that none of the lists has any repeating pairs
+status <- list()
+
+for (i in 1:length(setList2)) {
+  status[i] <- (length(unique(setList2[[i]])) == length(setList2[[i]]))
+  }
+
+unique(status) # this should be TRUE
+```
+
+```{r}
+# adding attention checks
+setListTestAttentionChecks2 <- append_attention_checks(stimuli_set_list = setList2,
+                                                      interval_span = 10,
+                                                      random_seed = 2025)
+```
+
+```{r}
+finalize_set(set_list_with_checks = setListTestAttentionChecks2,
+             path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/drawing_lists/",
+             file_name = "new_stim_list",
+             study_nr = 2,
+             number_of_ratings = 5)
+```
+
+## 3.3 Making a set for study 3
+
+```{r}
+# creating stimuli set for study 3
+setList3 <- create_random_subsets(participant_num = 60,
+                      ratings_pr_image = 5,
+                      drawingNumber = length(study_3_stimuli),
+                      random_seed = 2025)
+
+length(setList3)
+```
+
+```{r}
+# visualising to check that each pair appears n times across all lists
+simplehist(unlist(setList3))
+unique(table(unlist(setList3)))
+
+# checking that none of the lists has any repeating pairs
+status <- list()
+
+for (i in 1:length(setList3)) {
+  status[i] <- (length(unique(setList3[[i]])) == length(setList3[[i]]))
+  }
+
+unique(status) # this should be TRUE
+```
+
+```{r}
+# adding attention checks
+setListTestAttentionChecks3 <- append_attention_checks(stimuli_set_list = setList3,
+                                                      interval_span = 10,
+                                                      random_seed = 2025)
+
+length(setListTestAttentionChecks3)
+```
+
+```{r}
+finalize_set(set_list_with_checks = setListTestAttentionChecks3,
+             path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/drawing_lists/",
+             file_name = "new_stim_list",
+             study_nr = 3,
+             number_of_ratings = 5)
+```
+
+# 5. Visualising the lengths of individual rating sets between the different studies
+
+```{r}
+# visualising lengths of the final ratings sets
+
+# set 1
+length_list <- lapply(setListTestAttentionChecks1, length)
+simplehist(unlist(length_list),
+           main = "Stim sets from study 1",
+           xlab = "Number of drawings in the final rating sets \n(after adding attention checks)")
+
+# set 2
+length_list <- lapply(setListTestAttentionChecks2, length)
+simplehist(unlist(length_list),
+           main = "Stim sets from study 2",
+           xlab = "Number of drawings in the final rating sets \n(after adding attention checks)")
+
+# set 3
+length_list <- lapply(setListTestAttentionChecks3, length)
+simplehist(unlist(length_list),
+           main = "Stim sets from study 3",
+           xlab = "Number of drawings in the final rating sets \n(after adding attention checks)")
+
+length(setListTestAttentionChecks3)
+```
