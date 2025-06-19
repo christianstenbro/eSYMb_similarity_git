@@ -6,11 +6,15 @@
   <div class="collapse{{ instructions_hidden }}" id="instructionsbody">
 	  <div class="card card-body">
       <p>
-        Good job!
+        Good job! <br>
       </p>
       <p>
-        You will now begin the experiment. <br>
-        There are around 400 trials divided into 3 blocks. <br>
+        You will now begin the experiment.
+      </p>
+      <p id="update-text" style="margin-bottom: 0;">
+        There are around 400 trials divided into 3 blocks.
+      </p>
+      <p style="margin-top: 0;">
         We will invite you to take a short break after each block. 
       </p>
       <p>
@@ -21,3 +25,29 @@
 	</div>
   </div>
 </div>
+
+<script type="text/javascript">
+
+// fetching the study number from the session configurations
+studyNumber = {{ session.config.study_number }};
+console.log("Study number = ", studyNumber);
+
+// defining trial number variable based on study number
+let trialNumber;
+
+switch (studyNumber) {
+  case 1: 
+    trialNumber = 270;
+    break;
+  case 2: 
+    trialNumber = 250;
+    break;
+  case 3:
+    trialNumber = 400;
+    break;
+};
+
+// updating text
+document.getElementById('update-text').innerText = `There are around ${trialNumber} trials divided into 3 blocks`;
+
+</script>
