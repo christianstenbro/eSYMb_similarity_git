@@ -9,34 +9,281 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-
 ```{r}
-library(tidyverse)
-
-data <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/test_data/all_apps_wide-2025-04-29.csv")
+pacman::p_load(tidyverse,
+               rjson,
+               rethinking)
 ```
 
 ```{r}
-head(data)
+# reading pilot data
+data <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data/Pilot_all_studies_session_3_SimilarityRatingExperiment_2025-06-19.csv")
+```
+# Pre-processing
+
+```{r}
+# filtering out non-participant rows
+data <- data %>% filter(participant.label != "NA")
+
+# checking out the data for a single participant (participant 1)
+participant_list <- unique(data$participant.label)
 ```
 
+Turn this into a function:
+
+```{r}
+organize_data <- function(ID_number) {
+  
+  ID <- participant_list[ID_number]
+  
+  subset <- data %>% filter(participant.label == ID)
+  
+  # setting up constants
+  rounds <- c(1,3,5)
+  
+  # unpacking the JSON lists
+  image_indices <- list()
+  image_ratings <- list()
+  rating_times <- list()
+  is_attention_check <- list()
+  #attention_check_status <- list()
+  
+  for (i in rounds) {
+    image_indices <- append(image_indices, list(fromJSON(subset$player.imageIndices[i])))
+    image_ratings <- append(image_ratings, list(fromJSON(subset$player.imageRatings[i])))
+    rating_times <- append(rating_times, list(fromJSON(subset$player.ratingTimes[i])))
+    is_attention_check <- append(is_attention_check, list(fromJSON(subset$player.isAttentionCheck[i])))
+    #attention_check_status <- append(attention_check_status, list(fromJSON(subset$player.withinExpectedRatingRange[i])))
+  }
+  
+  #unpacking lists
+  image_indices <- unlist(image_indices)
+  image_ratings <- unlist(image_ratings)
+  rating_times <- unlist(rating_times)
+  is_attention_check <- unlist(is_attention_check)
+  #attention_check_status <- unlist(attention_check_status)
+  
+  # making a new data base for visualisation purposes
+  subset_unpacked <- data_frame(image_indices,
+                                image_ratings,
+                                rating_times,
+                                is_attention_check)
+                                #attention_check_status)
+  
+  
+  
+  # making a single object containing the attention check status variable
+  attention_check_status <- list()
+  
+  for (i in rounds) {
+    attention_check_status <- append(attention_check_status, list(fromJSON(subset$player.withinExpectedRatingRange[i])))
+  }
+  
+  attention_check_status <- unlist(unlist(attention_check_status))
+  
+  return(list(subset_unpacked = subset_unpacked, 
+              attention_check_status = attention_check_status)
+         )
+}
+```
+
+Making a function to append attention checks to the participant subset (relies on the previous function):
+
+```{r}
+subset_with_attention_check_status <- function(ID_number) {
+  
+  temp_data <- organize_data(ID_number)
+  
+  # getting the indices for the att. checks
+  att_checks_indices <- temp_data$subset_unpacked$image_indices[temp_data$subset_unpacked$is_attention_check == TRUE]
+  
+  # cleaning the attention check pass fail variable to only contain TRUE / FALSE
+  attention_check_status_clean <- grep("^(TRUE|FALSE)$", temp_data$attention_check_status, value = TRUE)
+  
+  # combining into a new table alongside the att. check indices
+  attention_check_status_clean <- tibble(attention_check_status_clean, att_checks_indices)
+  
+  # merging this with the organized data frame
+  subset_complete <- merge(temp_data$subset_unpacked, attention_check_status_clean, by.x = "image_indices", by.y = "att_checks_indices", all=T)
+ 
+  return(subset_complete)
+}
+```
+
+The final step is to stitch together a new grand data frame from the subsets created with the subset_with_attention_check_status() function:
+
+```{r}
+# setting up constants
+participants <- c(1:10)
+
+# setting up empty data frame
+df <- data.frame()
+
+# looping
+for (i in participants) {
+  temp_subset <- subset_with_attention_check_status(i)
+  sequential_ID <- rep(i, nrow(temp_subset))
+  temp_subset$sequential_ID <- sequential_ID
+  df <- rbind(df, temp_subset)
+}
+
+# checking out the combined data frame
+df
+```
+
+Checking attention check status
+
+```{r}
+
+
+df %>% filter(sequential_ID == 3) %>% filter(is_attention_check == TRUE)
+```
+
+
+# Extracting comments
+```{r}
+data$player.technicalIssues
+data$player.dataValidity
+```
+
+
+# Statistics
+
+```{r}
+# grouping the data
+df <- df %>% group_by(sequential_ID)
+
+# reformating data types
+df$image_ratings <- as.numeric(df$image_ratings)
+df$attention_check_status_clean <- as.logical(df$attention_check_status_clean)
+
+
+df_summary <- df %>% summarise('rt_median' = median(rating_times), 
+                 'rt_sd' = sd(rating_times),
+                 'rating_mean' = mean(image_ratings), 
+                 'rating_sd' = sd(image_ratings),
+                 'failed_att_checks' = sum(attention_check_status_clean == FALSE, na.rm = TRUE))
+
+# print the entire stat summary
+df_summary
+
+# computing aggregated stats
+# mean of means study 3
+round(mean(df_summary$rt_median[1:4]), 1)
+round(mean(df_summary$rt_sd[1:4]), 1)
+round(mean(df_summary$rating_mean[1:4]), 1)
+round(mean(df_summary$rating_sd[1:4]), 1)
+
+# mean of means study 2
+round(mean(df_summary$rt_median[5:7]), 1)
+round(mean(df_summary$rt_sd[5:7]), 1)
+round(mean(df_summary$rating_mean[5:7]), 1)
+round(mean(df_summary$rating_sd[5:7]), 1)
+
+# mean of means study 1
+round(mean(df_summary$rt_median[8:10]), 1)
+round(mean(df_summary$rt_sd[8:10]), 1)
+round(mean(df_summary$rating_mean[8:10]), 1)
+round(mean(df_summary$rating_sd[8:10]), 1)
+```
+The stats are appended to the data frame
+
+```{r}
+df <- merge(df, df_summary, by = "sequential_ID", all = T)
+```
+
+# Visualisation
+
+Prior to visualising, data from participants failing more than two attention checks are filtered out:
+
+```{r}
+df_summary
+```
+
+
+```{r}
+#visual_subset <- df %>% filter(failed_att_checks <= 2)
+visual_subset <- df
+```
+
+```{r}
+simplehist(visual_subset$image_ratings)
+simplehist(visual_subset$rating_times)
+```
+
+
+```{r}
+visual_subset
+
+# visualising the combined data frame
+# making color scale for ratings
+z <- as.numeric(visual_subset$image_ratings)
+n_colors <- 100
+color_indices <- as.numeric(cut(z, breaks = n_colors, include.lowest = TRUE))
+point_colors_r <- viridis(n_colors)[color_indices]
+
+# making color scale for rating times
+z <- visual_subset$rating_times
+n_colors <- 100
+color_indices <- as.numeric(cut(z, breaks = n_colors, include.lowest = TRUE))
+point_colors_rt <- viridis(n_colors)[color_indices]
+
+# drawing plots for image ratings
+plot(x = visual_subset$image_indices,
+     y = visual_subset$image_ratings,
+     col = col.alpha(point_colors_r, 0.2),
+     pch = 19,
+     main = "ratings x indices",
+     xlab = "index", ylab = "similarity rating (numeric)")
+
+# adding stats
+#abline(h = df_summary$rating_mean, col = df_summary$sequential_ID)
+
+
+# drawing rating time plot
+plot(x = visual_subset$image_indices,
+     y = visual_subset$rating_times,
+     col = col.alpha(point_colors_rt, 0.2), 
+     pch = 19,
+     main = "rating times x indices",
+     xlab = "index", ylab = "rating time (mili seconds)",
+     ylim = c(0,40000)
+     )
+
+```
+
+
+
+```{r}
+# trying to visualize this stuff
+library(viridis)
+
+# making color scale for ratings
+z <- as.numeric(subset_unpacked$image_ratings)
+n_colors <- 100
+color_indices <- as.numeric(cut(z, breaks = n_colors, include.lowest = TRUE))
+point_colors_r <- viridis(n_colors)[color_indices]
+
+# making color scale for rating times
+z <- subset_unpacked$rating_times
+n_colors <- 100
+color_indices <- as.numeric(cut(z, breaks = n_colors, include.lowest = TRUE))
+point_colors_rt <- viridis(n_colors)[color_indices]
+
+# drawing plots
+plot(x = subset_unpacked$image_indices,
+     y = subset_unpacked$image_ratings,
+     col = point_colors_r,
+     pch = 19,
+     main = "ratings x indices",
+     xlab = "index", ylab = "similarity rating (numeric)")
+
+plot(x = subset_unpacked$image_indices,
+     y = subset_unpacked$rating_times,
+     col = point_colors_rt,
+     pch = 19,
+     main = "rating times x indices",
+     xlab = "index", ylab = "rating time (mili seconds)",
+     ylim = c(0,50000))
+```
 
