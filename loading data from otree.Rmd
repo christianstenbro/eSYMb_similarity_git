@@ -21,13 +21,52 @@ data <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/o
 ```
 # Pre-processing
 
+## Loading Otree page times
+
+```{r}
+pagetimes <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data/PageTimes-2025-06-20.csv")
+```
+
+## Loading Otree similarity experiment data
+
 ```{r}
 # filtering out non-participant rows
 data <- data %>% filter(participant.label != "NA")
+colnames(data)
 
 # checking out the data for a single participant (participant 1)
 participant_list <- unique(data$participant.label)
+participant_code_list <- unique(data$participant.code)
+
+subset_temp <- data %>% filter(participant.label == participant_list[1])
+
+subset_temp$participant.time_started_utc
+
+data$participant.code
 ```
+The chunk below should be turned into a function as well; to append the total rating time/break time to the data frame with the ratings, etc.
+
+```{r}
+# computing total rating time
+pagetimes_temp <- pagetimes %>% filter(participant_code == participant_code_list[1])
+
+participant_code_list
+
+# making a row num. variable
+pagetimes_temp <- pagetimes_temp %>% mutate(row_num = 1:nrow(pagetimes_temp))
+
+# extracting rating page/break page rows
+pagetimes_temp <- pagetimes_temp[14:19,]
+
+pagetimes_temp$epoch_time_completed
+
+# computing the total time spent
+time_spent_seconds <- pagetimes_temp$epoch_time_completed[6]-pagetimes_temp$epoch_time_completed[1]
+
+time_spent_minutes <- time_spent_seconds / 60
+```
+
+## Defining functions
 
 Turn this into a function:
 
@@ -46,6 +85,8 @@ organize_data <- function(ID_number) {
   image_ratings <- list()
   rating_times <- list()
   is_attention_check <- list()
+  stim_indices <- list()
+  file_names <- list()
   #attention_check_status <- list()
   
   for (i in rounds) {
@@ -53,6 +94,8 @@ organize_data <- function(ID_number) {
     image_ratings <- append(image_ratings, list(fromJSON(subset$player.imageRatings[i])))
     rating_times <- append(rating_times, list(fromJSON(subset$player.ratingTimes[i])))
     is_attention_check <- append(is_attention_check, list(fromJSON(subset$player.isAttentionCheck[i])))
+    stim_indices <- append(stim_indices, list(fromJSON(subset$player.stimIndices[i])))
+    file_names <- append(file_names, list(fromJSON(subset$player.originalFileName[i])))
     #attention_check_status <- append(attention_check_status, list(fromJSON(subset$player.withinExpectedRatingRange[i])))
   }
   
@@ -61,13 +104,17 @@ organize_data <- function(ID_number) {
   image_ratings <- unlist(image_ratings)
   rating_times <- unlist(rating_times)
   is_attention_check <- unlist(is_attention_check)
+  stim_indices <- unlist(stim_indices)
+  file_names <- unlist(file_names)
   #attention_check_status <- unlist(attention_check_status)
   
   # making a new data base for visualisation purposes
   subset_unpacked <- data_frame(image_indices,
                                 image_ratings,
                                 rating_times,
-                                is_attention_check)
+                                is_attention_check,
+                                stim_indices,
+                                file_names)
                                 #attention_check_status)
   
   
@@ -134,8 +181,6 @@ df
 Checking attention check status
 
 ```{r}
-
-
 df %>% filter(sequential_ID == 3) %>% filter(is_attention_check == TRUE)
 ```
 
@@ -153,6 +198,11 @@ data$player.dataValidity
 # grouping the data
 df <- df %>% group_by(sequential_ID)
 
+# adding study number variable
+df <- df %>% mutate(study_nymber = case_when((sequential_ID >= 1 & sequential_ID <= 4) ~ 1,
+                                             (sequential_ID >= 5 & sequential_ID <= 7) ~ 2,
+                                             (sequential_ID >= 8 & sequential_ID <= 10) ~ 3))
+
 # reformating data types
 df$image_ratings <- as.numeric(df$image_ratings)
 df$attention_check_status_clean <- as.logical(df$attention_check_status_clean)
@@ -162,7 +212,9 @@ df_summary <- df %>% summarise('rt_median' = median(rating_times),
                  'rt_sd' = sd(rating_times),
                  'rating_mean' = mean(image_ratings), 
                  'rating_sd' = sd(image_ratings),
-                 'failed_att_checks' = sum(attention_check_status_clean == FALSE, na.rm = TRUE))
+                 'failed_att_checks' = sum(attention_check_status_clean == FALSE, na.rm = TRUE),
+                 'total_rating_time_ms' = sum(rating_times),
+                 'total_rating_time_min' = sum(rating_times)/1000/60)
 
 # print the entire stat summary
 df_summary
@@ -203,7 +255,7 @@ df_summary
 
 ```{r}
 #visual_subset <- df %>% filter(failed_att_checks <= 2)
-visual_subset <- df
+visual_subset <- df %>% filter(study_nymber == 3)
 ```
 
 ```{r}
@@ -211,9 +263,15 @@ simplehist(visual_subset$image_ratings)
 simplehist(visual_subset$rating_times)
 ```
 
+```{r}
+visual_subset$image_ratings <- as.numeric(visual_subset$image_ratings)
+```
+
 
 ```{r}
-visual_subset
+simplehist(visual_subset$image_ratings)
+
+
 
 # visualising the combined data frame
 # making color scale for ratings
