@@ -15,58 +15,39 @@ pacman::p_load(tidyverse,
                rethinking)
 ```
 
+# 1. Preprocessing
+
+## 1.1 Reading data and removing empty columns
+
 ```{r}
 # reading pilot data
-data <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data/Pilot_all_studies_session_3_SimilarityRatingExperiment_2025-06-19.csv")
+data <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data/Pilot_session_2_study_1_SimilarityRatingExperiment_2025-06-20.csv")
 ```
-# Pre-processing
-
-## Loading Otree page times
 
 ```{r}
+# loading otree page time data
 pagetimes <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data/PageTimes-2025-06-20.csv")
 ```
-
-## Loading Otree similarity experiment data
 
 ```{r}
 # filtering out non-participant rows
 data <- data %>% filter(participant.label != "NA")
+pagetimes <- pagetimes %>% filter(participant_code != "NA")
+
+# checking out the variable names
+cat("rating data columns:", "\n")
 colnames(data)
-
-# checking out the data for a single participant (participant 1)
-participant_list <- unique(data$participant.label)
-participant_code_list <- unique(data$participant.code)
-
-subset_temp <- data %>% filter(participant.label == participant_list[1])
-
-subset_temp$participant.time_started_utc
-
-data$participant.code
+cat("pagetime columns:","\n")
+colnames(pagetimes)
 ```
-The chunk below should be turned into a function as well; to append the total rating time/break time to the data frame with the ratings, etc.
 
 ```{r}
-# computing total rating time
-pagetimes_temp <- pagetimes %>% filter(participant_code == participant_code_list[1])
-
-participant_code_list
-
-# making a row num. variable
-pagetimes_temp <- pagetimes_temp %>% mutate(row_num = 1:nrow(pagetimes_temp))
-
-# extracting rating page/break page rows
-pagetimes_temp <- pagetimes_temp[14:19,]
-
-pagetimes_temp$epoch_time_completed
-
-# computing the total time spent
-time_spent_seconds <- pagetimes_temp$epoch_time_completed[6]-pagetimes_temp$epoch_time_completed[1]
-
-time_spent_minutes <- time_spent_seconds / 60
+# making lists of participant codes/labels
+participant_label_list <- unique(data$participant.label)
+participant_code_list <- unique(data$participant.code)
 ```
 
-## Defining functions
+## 1.2 Defining functions to extract variables from the rating data ('data' object)
 
 Turn this into a function:
 
@@ -156,6 +137,83 @@ subset_with_attention_check_status <- function(ID_number) {
   return(subset_complete)
 }
 ```
+
+## 1.3 Defining functions to extract variables from the page time data ('pagetimes' object)
+
+We want to: 
+
+- Extract the page times for each rating round and break round, for each participant
+
+```{r}
+# grouping and ordering the rows by participant
+pagetimes <- pagetimes %>% group_by(participant_code) %>% arrange()
+
+# filtering out the irrelevant rounds
+pagetimes_filtered <- pagetimes %>% filter(page_name == "Rating_modification_round_structure" 
+                                           | page_name == "BreakPage" 
+                                           | page_name == "Instruction_5")
+
+# finding the participant codes that appear in both data frames
+match <- pagetimes_filtered$participant_code %in% data$participant.code 
+
+# filtering out rows in pagetimes object without a match in the rating data frame
+pagetimes_filtered <- pagetimes_filtered %>% 
+  filter(participant_code %in% data$participant.code) %>% 
+  group_by(participant_code) %>% 
+  arrange()
+
+# making sure all page times are recorded for all participants
+for (i in 1:length(unique(pagetimes_filtered$participant_code))) {
+  pagetime_temp <- pagetimes_filtered %>% filter(participant_code == participant_code_list[i])
+  if (length(pagetime_temp)<6) {
+    print("missing data")
+  } else { 
+    print("all good")
+    }
+}
+```
+
+We now want to change this to long format:
+
+```{r}
+pagetimes_filtered
+```
+
+
+
+
+
+```{r}
+
+participant_list <- unique(data$participant.label)
+participant_code_list <- unique(data$participant.code)
+
+subset_temp <- data %>% filter(participant.label == participant_list[1])
+
+subset_temp$participant.time_started_utc
+
+data$participant.code
+# computing total rating time
+pagetimes_temp <- pagetimes %>% filter(participant_code == participant_code_list[1])
+
+participant_code_list
+
+# making a row num. variable
+pagetimes_temp <- pagetimes_temp %>% mutate(row_num = 1:nrow(pagetimes_temp))
+
+# extracting rating page/break page rows
+pagetimes_temp <- pagetimes_temp[14:19,]
+
+pagetimes_temp$epoch_time_completed
+
+# computing the total time spent
+time_spent_seconds <- pagetimes_temp$epoch_time_completed[6]-pagetimes_temp$epoch_time_completed[1]
+
+time_spent_minutes <- time_spent_seconds / 60
+```
+
+
+## 1.4 Applying functions to create the 'grand data frame'
 
 The final step is to stitch together a new grand data frame from the subsets created with the subset_with_attention_check_status() function:
 
