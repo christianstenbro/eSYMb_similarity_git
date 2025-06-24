@@ -54,36 +54,48 @@
             </label>
         </div> 
         
-    <!-- slider input element -->
-    <div style="text-align: center; margin-top: 20px;">
-        <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
-        
-        <!-- LOW label -->
-        <span style="background-color: lightgray; padding: 5px 10px; border-radius: 5px; font-weight: bold;">LOW</span>
-        
-        <!-- Slider and label -->
-        <div style="display: flex; align-items: center;">
-            <!-- <label for="slider" style="margin-right: 10px;">Similarity:</label> -->
-            <input 
-            type="range" 
-            id="slider" 
-            name="slider" 
-            min="0" 
-            max="100" 
-            value="50" 
-            oninput="updateSliderValue(this.value)" 
-            style="width: 300px; height: 20px;"
-            >
-        </div>
-      
-        <!-- 'HIGH' label -->
-        <span style="background-color: lightgray; padding: 5px 10px; border-radius: 5px; font-weight: bold;">HIGH</span>
-  
-        </div>
+        <!-- likert scale CSS in-line element (necessary to overwrite default Otree CSS for radio buttons) -->
+        <style>
+        #ratingRadios input[type="radio"] {
+            appearance: radio !important;
+            -webkit-appearance: radio !important;
+            -moz-appearance: radio !important;
+            display: inline-block !important;
+            opacity: 1 !important;
+            position: static !important;
+            width: auto !important;
+            height: auto !important;
+            margin: 0 0 0 0;
+            vertical-align: middle;
+            cursor: pointer;
+            transform: scale(1.3); 
+        }
+        </style>
 
-        <!-- Display slider value (hidden) -->    
-        <span id="sliderValue" style="visibility: hidden;">50</span>
-
+        <!-- likert scale rating element -->
+        <div id="ratingContainer" style="display: flex; justify-content: center; align-items: center; gap: 10px; padding: 10px; margin-top: 20px;">
+            <div id="ratingRadios">
+                <label>
+                    <span>Very Low</span>
+                    <input type="radio" name="rating" value="1">
+                </label>
+                <label>
+                    <span>Low</span>
+                    <input type="radio" name="rating" value="2">
+                </label>
+                <label>
+                    <span>Intermediate</span>
+                    <input type="radio" name="rating" value="3">
+                </label>
+                <label>
+                    <span>High</span>
+                    <input type="radio" name="rating" value="4">
+                </label>
+                <label>
+                    <span>Very High</span>
+                    <input type="radio" name="rating" value="5">
+                </label>
+            </div>
         </div>
         
         <!-- progress text -->
@@ -322,7 +334,6 @@ function getStimIndex(index) {
 };
 
 // let currentImageIndex = 1;
-let sliderValue = -1; // Initialize the slider value
 let result; // this is a global variable that will be used to store the image file path + result of the 'is attention check test'
 
 // Initializing lists to store variables that will be sent to the Otree database
@@ -334,26 +345,36 @@ let isAttentionCheck = [];
 let withinExpectedRatingRange = [];
 let originalFileName = [];
 
+// Initialize the rating variable
+let selectedRating = null;
+
+// Listen for changes to any radio input with name="rating"
+document.querySelectorAll('input[name="rating"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        selectedRating = parseInt(this.value);
+        console.log("Selected rating:", selectedRating); // For testing
+        // enabling button
+        if (selectedRating != null) { // set to -1 to make 0 a useable rating
+            document.getElementById("button_next").disabled = false;
+        } else {
+            document.getElementById("button_next").disabled = true;
+        }    
+    });
+});
+
 // Initializing new trial-in-block variable
 let trialInBlock = 1;
-
-// Function to update the displayed slider value
-function updateSliderValue(value) {
-    document.getElementById('sliderValue').textContent = value;
-    sliderValue = value; // Update the global slider value
-    checkSliderValue(value); // Check the slider value to enable/disable the button
-}
 
 // Function to test whether the attention check rating is in the desired range
 
 // define expected ratings for attChecks (could be turned into a Otree variable, to be defined in the python script)
-const highRatingThreshold = 60;
-const lowRatingThreshold = 40; 
+const highRatingThreshold = 4; // only passed if the rating is 'very high' - that is above 4
+const lowRatingThreshold = 2; // only passed if the rating is 'very low' - that is below 2
 
 function attCheckWithinRange() {
 
     const type = result.expectedRating;
-    const rating = sliderValue;
+    const rating = selectedRating;
 
     let ratingWithinRange;
 
@@ -373,9 +394,9 @@ function updateInstruction() {
     const paragraph = instructionBox.querySelector('p');
 
     if (result.attCheckTest && result.expectedRating == 'high') {
-        paragraph.innerText = 'You must rate the similarity of this pair as extremely high. This is an attention check.';
+        paragraph.innerText = 'You must rate the similarity of this pair as very high. This is an attention check.';
     } else if (result.attCheckTest && result.expectedRating == 'low') {
-        paragraph.innerText = 'You must rate the similarity of this pair as extremely low. This is an attention check.';
+        paragraph.innerText = 'You must rate the similarity of this pair as very low. This is an attention check.';
     } else {
         paragraph.innerText = 'How do you rate the similarity of these drawings? Use the scale below to respond.';
     };
@@ -394,22 +415,14 @@ window.onload = function () {
     updateInstruction();
 };
 
-// Function to enable button once the slider has been moved
-function checkSliderValue(value) {
-	if (value > -1) { // set to -1 to make 0 a useable rating
-		document.getElementById("button_next").disabled = false;
-	} else {
-		document.getElementById("button_next").disabled = true;		}
-} 
-
 // Initial check to disable the "Next" button at page load
 document.getElementById("button_next").disabled = true;
 
 // Using the 'enter' key as an alternative to clicking the 'next' button
 document.addEventListener("keydown", function(event) {
   if (event.key === "Enter") {
-    const slider = document.getElementById('slider');
-    const condition = (slider.value != 50);
+
+    const condition = (selectedRating != null);
 
     if (condition) {
       event.preventDefault();
@@ -433,9 +446,9 @@ function loadNextImage() {
     let stimIndex = getStimIndex(currentImageIndex) // this currentImageIndex matches the entry order in the JSON
     // console.log("stimIndex", stimIndex) // remember; the stimIndex is the actual ID of the drawing in the JSON file
 
-    // Append current outer image index, stim index, and slider value to the lists
+    // Append current outer image index, stim index, and rating value to the lists
     imageIndices.push(currentImageIndex);
-    imageRatings.push(sliderValue);
+    imageRatings.push(selectedRating);
     stimIndices.push(stimIndex);
     ratingTimes.push(RT);
     isAttentionCheck.push(result.attCheckTest);
@@ -482,8 +495,12 @@ function loadNextImage() {
             
         // these are call-backs to the HTML structure in the top of the page
         document.getElementById('imagePair').src = nextImageUrl;
-        document.getElementById('slider').value = 50;
-        updateSliderValue(50);
+        // reset the radioButtons
+        document.querySelectorAll('input[name="rating"]').forEach(radio => {
+            radio.checked = false;
+            });
+        // reset the selectedRating variable
+        selectedRating = null;
         document.getElementById("button_next").disabled = true; // Disable the next button
     };
 

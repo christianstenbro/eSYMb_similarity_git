@@ -246,7 +246,7 @@
 /* Container for the progress bar */
 #progress-container {
 	position: absolute;             
-	margin-top: 20px;
+	margin-top: 25px;
 }
 
 /* Progress text styling */
@@ -343,4 +343,49 @@ div.form-control-errors {
 	text-align: center;
 	margin-top: 20px;
     margin-bottom: 10px;
+}
+
+#ratingRadios {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 560px;
+  margin: 0;
+  position: relative;
+  margin-bottom: 10px;
+}
+
+#ratingContainer {
+	/* border: 1px solid #ccc; */
+    border-radius: 6px;           
+    background-color: #f7f7f7;    
+}
+
+#ratingRadios::before {
+  content: "";
+  position: absolute;
+  top: 35px; /* Adjust to sit behind buttons */
+  left: 10%;  /* Slight inset to avoid edges */
+  right: 10%;
+  height: 1px;
+  background-color: #ccc;
+  z-index: 0;
+}
+
+#ratingRadios label {
+  display: flex;
+  flex-direction: column;  /* stack vertically */
+  align-items: center;
+  cursor: pointer;
+  flex: 1;                /* spread evenly */
+  margin: 0 0px;
+  font-size: 14px;
+  z-index: 1;
+}
+
+#ratingRadios label span {
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
 }
