@@ -105,6 +105,7 @@
 			{{ formfield_errors 'imageIndices' }}
 			{{ formfield_errors 'imageRatings' }}
             {{ formfield_errors 'stimIndices' }}
+            {{ formfield_errors 'sessionStudyNumber'}}
         </div>
         <br>
         <!-- 'Next' button -->
@@ -117,6 +118,7 @@
 			<input type="hidden" name="imageIndices" id="imageIndices" />
 			<input type="hidden" name="imageRatings" id="imageRatings" />
             <input type="hidden" name="stimIndices" id="stimIndices" />
+            <input type="hidden" name="sessionStudyNumber" id="sessionStudyNumber" />
 		</div>
   </div>
 </div>
@@ -145,7 +147,7 @@ observer.observe(target, {
 });
 
 // loading the study number
-studyNumber = {{ session.config.study_number }};
+let studyNumber = {{ session.config.study_number }};
 console.log("Study number = ", studyNumber);
 
 // number of images to be rated in the practice round
@@ -199,6 +201,7 @@ function getImageUrl(index) {
 // Initializing lists to store variables
 let imageIndices = [];
 let imageRatings = [];
+let sessionStudyNumber = [];
 
 // Initialize the rating variable
 let selectedRating = null;
@@ -223,10 +226,12 @@ function loadNextImage() {
     // Append current outer image index, stim index, and rating value to the lists
     imageIndices.push(currentImageIndex);
     imageRatings.push(selectedRating);
+    sessionStudyNumber.push(studyNumber);
 
     // Update hidden input fields
     document.getElementById('imageIndices').value = JSON.stringify(imageIndices);
     document.getElementById('imageRatings').value = JSON.stringify(imageRatings);
+    document.getElementById('sessionStudyNumber').value = JSON.stringify(sessionStudyNumber);
 
 	// Adding one to the img idx
     if (currentImageIndex < practiceRoundSize) {

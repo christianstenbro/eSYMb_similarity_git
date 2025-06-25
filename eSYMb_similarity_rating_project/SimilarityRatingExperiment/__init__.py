@@ -61,6 +61,7 @@ class Player(BasePlayer):
                                          blank=True)
     dataValidity = models.StringField(label="Is there any reason why we should not use your data?", 
                                       blank=True)
+    sessionStudyNumber = models.StringField(blank=True)
     
 # PAGES
 class Introduction(Page):
@@ -101,7 +102,8 @@ class Rating_modification_round_structure(Page):
                    "ratingTimes", 
                    "isAttentionCheck",
                    "withinExpectedRatingRange",
-                   "originalFileName"]
+                   "originalFileName",
+                   "sessionStudyNumber"]
 
     @staticmethod # sending variables to the HTML template
     def vars_for_template(player):

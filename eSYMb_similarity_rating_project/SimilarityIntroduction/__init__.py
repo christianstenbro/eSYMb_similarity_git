@@ -62,6 +62,7 @@ class Player(BasePlayer):
     imageRatings = models.StringField(blank=True)
     imageIndices = models.StringField(blank=True)
     stimIndices = models.StringField(blank=True)
+    sessionStudyNumber = models.StringField(blank=True)
 
 
 def pattern_choices(player):
@@ -145,7 +146,8 @@ class Rating_practice(Page):
     form_model = "player"
     form_fields = ["imageRatings", 
                    "imageIndices",
-                   "stimIndices"]
+                   "stimIndices",
+                   "sessionStudyNumber"]
 
     @staticmethod # sending variables to the HTML template
     def vars_for_template(player):
