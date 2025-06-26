@@ -12,7 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 pacman::p_load(tidyverse,
                rjson,
-               rethinking)
+               rethinking,
+               viridis)
 ```
 
 # 1. Preprocessing
@@ -21,12 +22,12 @@ pacman::p_load(tidyverse,
 
 ```{r}
 # reading pilot data
-data <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data/Pilot_session_2_study_1_SimilarityRatingExperiment_2025-06-20.csv")
+data <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data_new_structure/SimilarityRatingExperiment_2025-06-26.csv")
 ```
 
 ```{r}
 # loading otree page time data
-pagetimes <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data/PageTimes-2025-06-20.csv")
+pagetimes <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data_new_structure/PageTimes-2025-06-26.csv")
 ```
 
 ```{r}
@@ -54,7 +55,7 @@ Turn this into a function:
 ```{r}
 organize_data <- function(ID_number) {
   
-  ID <- participant_list[ID_number]
+  ID <- participant_label_list[ID_number]
   
   subset <- data %>% filter(participant.label == ID)
   
@@ -68,6 +69,7 @@ organize_data <- function(ID_number) {
   is_attention_check <- list()
   stim_indices <- list()
   file_names <- list()
+  study_number <- list()
   #attention_check_status <- list()
   
   for (i in rounds) {
@@ -77,6 +79,7 @@ organize_data <- function(ID_number) {
     is_attention_check <- append(is_attention_check, list(fromJSON(subset$player.isAttentionCheck[i])))
     stim_indices <- append(stim_indices, list(fromJSON(subset$player.stimIndices[i])))
     file_names <- append(file_names, list(fromJSON(subset$player.originalFileName[i])))
+    study_number <- append(study_number, list(fromJSON(subset$player.sessionStudyNumber[i])))
     #attention_check_status <- append(attention_check_status, list(fromJSON(subset$player.withinExpectedRatingRange[i])))
   }
   
@@ -87,6 +90,7 @@ organize_data <- function(ID_number) {
   is_attention_check <- unlist(is_attention_check)
   stim_indices <- unlist(stim_indices)
   file_names <- unlist(file_names)
+  study_number <- unlist(study_number)
   #attention_check_status <- unlist(attention_check_status)
   
   # making a new data base for visualisation purposes
@@ -95,9 +99,9 @@ organize_data <- function(ID_number) {
                                 rating_times,
                                 is_attention_check,
                                 stim_indices,
-                                file_names)
+                                file_names,
+                                study_number)
                                 #attention_check_status)
-  
   
   
   # making a single object containing the attention check status variable
@@ -179,13 +183,8 @@ We now want to change this to long format:
 pagetimes_filtered
 ```
 
-
-
-
-
 ```{r}
-
-participant_list <- unique(data$participant.label)
+participant_label_list <- unique(data$participant.label)
 participant_code_list <- unique(data$participant.code)
 
 subset_temp <- data %>% filter(participant.label == participant_list[1])
@@ -213,16 +212,19 @@ time_spent_minutes <- time_spent_seconds / 60
 ```
 
 
+
 ## 1.4 Applying functions to create the 'grand data frame'
 
 The final step is to stitch together a new grand data frame from the subsets created with the subset_with_attention_check_status() function:
 
 ```{r}
+subset_with_attention_check_status(1)
+
 # setting up constants
 participants <- c(1:10)
 
 # setting up empty data frame
-df <- data.frame()
+df <- data_frame()
 
 # looping
 for (i in participants) {
@@ -242,24 +244,22 @@ Checking attention check status
 df %>% filter(sequential_ID == 3) %>% filter(is_attention_check == TRUE)
 ```
 
-
-# Extracting comments
+## 1.5 Extracting comments
 ```{r}
 data$player.technicalIssues
 data$player.dataValidity
 ```
 
-
-# Statistics
+# 2. Statistics
 
 ```{r}
 # grouping the data
 df <- df %>% group_by(sequential_ID)
 
 # adding study number variable
-df <- df %>% mutate(study_nymber = case_when((sequential_ID >= 1 & sequential_ID <= 4) ~ 1,
-                                             (sequential_ID >= 5 & sequential_ID <= 7) ~ 2,
-                                             (sequential_ID >= 8 & sequential_ID <= 10) ~ 3))
+# df <- df %>% mutate(study_nymber = case_when((sequential_ID >= 1 & sequential_ID <= 4) ~ 1,
+#                                              (sequential_ID >= 5 & sequential_ID <= 7) ~ 2,
+#                                              (sequential_ID >= 8 & sequential_ID <= 10) ~ 3))
 
 # reformating data types
 df$image_ratings <- as.numeric(df$image_ratings)
@@ -279,22 +279,22 @@ df_summary
 
 # computing aggregated stats
 # mean of means study 3
-round(mean(df_summary$rt_median[1:4]), 1)
-round(mean(df_summary$rt_sd[1:4]), 1)
-round(mean(df_summary$rating_mean[1:4]), 1)
-round(mean(df_summary$rating_sd[1:4]), 1)
-
-# mean of means study 2
-round(mean(df_summary$rt_median[5:7]), 1)
-round(mean(df_summary$rt_sd[5:7]), 1)
-round(mean(df_summary$rating_mean[5:7]), 1)
-round(mean(df_summary$rating_sd[5:7]), 1)
-
-# mean of means study 1
-round(mean(df_summary$rt_median[8:10]), 1)
-round(mean(df_summary$rt_sd[8:10]), 1)
-round(mean(df_summary$rating_mean[8:10]), 1)
-round(mean(df_summary$rating_sd[8:10]), 1)
+# round(mean(df_summary$rt_median[1:4]), 1)
+# round(mean(df_summary$rt_sd[1:4]), 1)
+# round(mean(df_summary$rating_mean[1:4]), 1)
+# round(mean(df_summary$rating_sd[1:4]), 1)
+# 
+# # mean of means study 2
+# round(mean(df_summary$rt_median[5:7]), 1)
+# round(mean(df_summary$rt_sd[5:7]), 1)
+# round(mean(df_summary$rating_mean[5:7]), 1)
+# round(mean(df_summary$rating_sd[5:7]), 1)
+# 
+# # mean of means study 1
+# round(mean(df_summary$rt_median[8:10]), 1)
+# round(mean(df_summary$rt_sd[8:10]), 1)
+# round(mean(df_summary$rating_mean[8:10]), 1)
+# round(mean(df_summary$rating_sd[8:10]), 1)
 ```
 The stats are appended to the data frame
 
@@ -302,18 +302,11 @@ The stats are appended to the data frame
 df <- merge(df, df_summary, by = "sequential_ID", all = T)
 ```
 
-# Visualisation
-
-Prior to visualising, data from participants failing more than two attention checks are filtered out:
-
-```{r}
-df_summary
-```
-
+# 3. Visualisation
 
 ```{r}
 #visual_subset <- df %>% filter(failed_att_checks <= 2)
-visual_subset <- df %>% filter(study_nymber == 3)
+visual_subset <- df
 ```
 
 ```{r}
@@ -328,8 +321,6 @@ visual_subset$image_ratings <- as.numeric(visual_subset$image_ratings)
 
 ```{r}
 simplehist(visual_subset$image_ratings)
-
-
 
 # visualising the combined data frame
 # making color scale for ratings
