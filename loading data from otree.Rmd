@@ -24,7 +24,6 @@ pacman::p_load(tidyverse,
 # reading pilot data
 data <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data_new_structure/SimilarityRatingExperiment_2025-06-26.csv")
 ```
-
 ```{r}
 # loading otree page time data
 pagetimes <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data_new_structure/PageTimes-2025-06-26.csv")
@@ -53,6 +52,39 @@ participant_code_list <- unique(data$participant.code)
 Turn this into a function:
 
 ```{r}
+data$subsession.round_number
+
+round_vector <- rep(i, length(study_number))
+```
+
+```{r}
+round_number <- list()
+
+round_number <- append(round_number, rep(1, 20))
+
+unlist(round_number)
+
+length(df$sequential_ID)
+
+image_indices <- list()
+
+image_indices <- append(image_indices, list(fromJSON(data$player.imageIndices[i])))
+
+length(image_indices[[1]])
+
+
+
+round_number <- append(round_number, rep(1, length(image_indices[[1]])))
+
+length(unlist(round_number))
+length(unlist(image_indices))
+
+
+length(fromJSON(data$player.imageIndices[1]))
+```
+
+
+```{r}
 organize_data <- function(ID_number) {
   
   ID <- participant_label_list[ID_number]
@@ -70,7 +102,7 @@ organize_data <- function(ID_number) {
   stim_indices <- list()
   file_names <- list()
   study_number <- list()
-  #attention_check_status <- list()
+  round_number <- list()
   
   for (i in rounds) {
     image_indices <- append(image_indices, list(fromJSON(subset$player.imageIndices[i])))
@@ -80,7 +112,11 @@ organize_data <- function(ID_number) {
     stim_indices <- append(stim_indices, list(fromJSON(subset$player.stimIndices[i])))
     file_names <- append(file_names, list(fromJSON(subset$player.originalFileName[i])))
     study_number <- append(study_number, list(fromJSON(subset$player.sessionStudyNumber[i])))
-    #attention_check_status <- append(attention_check_status, list(fromJSON(subset$player.withinExpectedRatingRange[i])))
+    
+    # adding round number
+    set_size <- length(fromJSON(subset$player.imageIndices[i]))
+    round_idx_vector <- rep(i, set_size)
+    round_number <- append(round_number, round_idx_vector)
   }
   
   #unpacking lists
@@ -91,6 +127,7 @@ organize_data <- function(ID_number) {
   stim_indices <- unlist(stim_indices)
   file_names <- unlist(file_names)
   study_number <- unlist(study_number)
+  round_number <- unlist(round_number)
   #attention_check_status <- unlist(attention_check_status)
   
   # making a new data base for visualisation purposes
@@ -100,9 +137,9 @@ organize_data <- function(ID_number) {
                                 is_attention_check,
                                 stim_indices,
                                 file_names,
-                                study_number)
+                                study_number,
+                                round_number)
                                 #attention_check_status)
-  
   
   # making a single object containing the attention check status variable
   attention_check_status <- list()
@@ -234,21 +271,29 @@ for (i in participants) {
   df <- rbind(df, temp_subset)
 }
 
+# adding attention check pass / fail status
+att_check_subset <- df %>% filter(is_attention_check == TRUE) %>% group_by(sequential_ID) %>% summarise(
+    passed_checks = sum(attention_check_status_clean == TRUE, na.rm = TRUE),
+    failed_checks = sum(attention_check_status_clean == FALSE, na.rm = TRUE)
+  )
+
+# merge this with the dataframe
+df <- merge(df, att_check_subset, by = 'sequential_ID', all.x = T)
+
 # checking out the combined data frame
 df
 ```
 
-Checking attention check status
 
-```{r}
-df %>% filter(sequential_ID == 3) %>% filter(is_attention_check == TRUE)
-```
+
 
 ## 1.5 Extracting comments
 ```{r}
 data$player.technicalIssues
 data$player.dataValidity
 ```
+
+## 1.6 Counting rounds
 
 # 2. Statistics
 
@@ -312,6 +357,14 @@ visual_subset <- df
 ```{r}
 simplehist(visual_subset$image_ratings)
 simplehist(visual_subset$rating_times)
+
+# plotting attention checks
+
+plot(att_check_subset$passed_checks,
+     xlab = "participant ID",
+     ylab = "Passed attention checks",
+     ylim = c(0,6),
+     main = "Passed attention checks x participant IDs")
 ```
 
 ```{r}
@@ -346,11 +399,10 @@ plot(x = visual_subset$image_indices,
 # adding stats
 #abline(h = df_summary$rating_mean, col = df_summary$sequential_ID)
 
-
 # drawing rating time plot
 plot(x = visual_subset$image_indices,
      y = visual_subset$rating_times,
-     col = col.alpha(point_colors_rt, 0.2), 
+     col = visual_subset$round_number, 
      pch = 19,
      main = "rating times x indices",
      xlab = "index", ylab = "rating time (mili seconds)",
@@ -358,8 +410,6 @@ plot(x = visual_subset$image_indices,
      )
 
 ```
-
-
 
 ```{r}
 # trying to visualize this stuff
