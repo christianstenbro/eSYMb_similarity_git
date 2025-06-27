@@ -18,9 +18,11 @@ pacman::p_load(tidyverse,
 Importing the original stim set files:
 
 ```{r}
-study_1_stim <- fromJSON("/Users/christianstenbro/Programming/eSYMb_similarity_git/eSYMb_similarity_rating_project/_static/similarity/stim_lists/new_stim_list_study_1_5_ratings.JSON")
-study_2_stim <- fromJSON("/Users/christianstenbro/Programming/eSYMb_similarity_git/eSYMb_similarity_rating_project/_static/similarity/stim_lists/new_stim_list_study_2_5_ratings.JSON")
-study_3_stim <- fromJSON("/Users/christianstenbro/Programming/eSYMb_similarity_git/eSYMb_similarity_rating_project/_static/similarity/stim_lists/new_stim_list_study_3_5_ratings.JSON")
+study_1_stim <- fromJSON("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/drawing_lists/new_stim_list_study_1_5_ratings.JSON")
+
+study_2_stim <- fromJSON("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/drawing_lists/new_stim_list_study_2_5_ratings.JSON")
+
+study_3_stim <- fromJSON("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/From Murillo OneDrive/drawing_lists/new_stim_list_study_3_5_ratings.JSON")
 ```
 
 We want to do the following: 
@@ -36,24 +38,20 @@ To do this, we need to keep the number of participants that have already complet
 ```{r}
 completed_participants_study_1 <- 3
 completed_participants_study_2 <- 3
-completed_participants_study_3 <- 4
+completed_participants_study_3 <- 14
 ```
 
 These can be used as parameters in the following function:
 
 ```{r}
-create_new_sets <- function(study_stim_set, num_completed_participants) {
+create_new_sets <- function(study_stim_set, remove_from, remove_till) {
   
-  n = num_completed_participants
-
-  set_size = length(study_stim_set)
+  unrated <- study_stim_set[-(remove_from:remove_till)]
   
-  already_rated <- study_stim_set[1:n]
-  
-  unrated <- study_stim_set[(n+1):set_size]
+  already_rated <- study_stim_set[(remove_from:remove_till)]
   
   # making new names starting from one:
-  new_names <- 1:(set_size-n)
+  new_names <- 1:length(unrated)
   
   # assigning new names to the unrated set:
   names(unrated) <- new_names
@@ -64,39 +62,36 @@ create_new_sets <- function(study_stim_set, num_completed_participants) {
 }
 ```
 
-Running the function on sets from all studies:
+Running the function on sets from study 3:
 
 ```{r}
-study_1_new_sets <- create_new_sets(study_stim_set = study_1_stim,
-                                    num_completed_participants = completed_participants_study_1)
-
-study_2_new_sets <- create_new_sets(study_stim_set = study_2_stim,
-                                    num_completed_participants = completed_participants_study_2)
-
 study_3_new_sets <- create_new_sets(study_stim_set = study_3_stim,
-                                    num_completed_participants = completed_participants_study_3)
+                                    remove_from = 5, # index
+                                    remove_till = 14) # index
+```
 
-# we can check that the 1st entry of a new sets match the nth entry of an old set
-for (i in 1:length(study_1_new_sets$unrated_sets)) {
-  n = completed_participants_study_1
-  print(unique(study_1_new_sets$unrated_sets[[i]] == study_1_stim[[i+n]]))
+Testing that this worked out correctly:
+```{r}
+# all should be true
+for (i in 1:4) {
+  print(identical(study_3_new_sets$unrated_sets[[i]], study_3_stim[[i]]))
 }
 
-for (i in 1:length(study_2_new_sets$unrated_sets)) {
-  n = completed_participants_study_2
-  print(unique(study_2_new_sets$unrated_sets[[i]] == study_2_stim[[i+n]]))
+# all should be false
+for (i in 5:14) {
+  print(identical(study_3_new_sets$unrated_sets[[i]], study_3_stim[[i]]))
 }
 
-for (i in 1:length(study_3_new_sets$unrated_sets)) {
-  n = completed_participants_study_3
-  print(unique(study_3_new_sets$unrated_sets[[i]] == study_3_stim[[i+n]]))
+# all should be true
+removed_rows <- 10
+
+for (i in 5:50) {
+  print(identical(study_3_new_sets$unrated_sets[[i]], study_3_stim[[i+removed_rows]]))
 }
 ```
 
 ```{r}
 # checking that the length matches the expectations
-length(study_1_new_sets$unrated_sets)
-length(study_2_new_sets$unrated_sets)
 length(study_3_new_sets$unrated_sets)
 ```
 
@@ -104,20 +99,15 @@ Everything looks okay so we move on to storing the sets:
 
 ```{r}
 # storing the unrated sets individually
-updated_stim_set_study_1 <- study_1_new_sets$unrated_sets
-updated_stim_set_study_2 <- study_2_new_sets$unrated_sets
 updated_stim_set_study_3 <- study_3_new_sets$unrated_sets
 
 # checking that the names are correct
-names(updated_stim_set_study_1)
-names(updated_stim_set_study_2)
 names(updated_stim_set_study_3)
+plot(names(updated_stim_set_study_3))
 ```
 
 ```{r}
 # converting back to JSON format
-updated_stim_set_study_1_JSON <- jsonlite::toJSON(updated_stim_set_study_1, pretty = TRUE)
-updated_stim_set_study_2_JSON <- jsonlite::toJSON(updated_stim_set_study_2, pretty = TRUE)
 updated_stim_set_study_3_JSON <- jsonlite::toJSON(updated_stim_set_study_3, pretty = TRUE)
 ```
 
@@ -137,24 +127,12 @@ finalize_set <- function(JSON_set_list, path, file_name, study_nr, number_of_rat
 Saving sets - notice that the file names are identical to the complete sets. The idea is to drag these into the stim_lists folder in the static folder and overwrite the old files.
 
 ```{r}
-# saving new set for study 1
-finalize_set(JSON_set_list = updated_stim_set_study_1_JSON,
-             path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/updated_stim_sets/",
-             file_name = "new_stim_list",
-             study_nr = 1,
-             number_of_ratings = 5)
-
-# saving new set for study 2
-finalize_set(JSON_set_list = updated_stim_set_study_2_JSON,
-             path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/updated_stim_sets/",
-             file_name = "new_stim_list",
-             study_nr = 2,
-             number_of_ratings = 5)
-
 # saving new set for study 3
 finalize_set(JSON_set_list = updated_stim_set_study_3_JSON,
-             path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/updated_stim_sets/",
+             path = "/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/updated_stim_sets_after_pilot_2/",
              file_name = "new_stim_list",
              study_nr = 3,
              number_of_ratings = 5)
 ```
+
+
