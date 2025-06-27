@@ -397,9 +397,9 @@ function updateInstruction() {
     const paragraph = instructionBox.querySelector('p');
 
     if (result.attCheckTest && result.expectedRating == 'high') {
-        paragraph.innerText = 'You must rate the similarity of this pair as very high. This is an attention check.';
+        paragraph.innerText = 'You must rate this pair as VERY HIGH. This is an attention check.';
     } else if (result.attCheckTest && result.expectedRating == 'low') {
-        paragraph.innerText = 'You must rate the similarity of this pair as very low. This is an attention check.';
+        paragraph.innerText = 'You must rate this pair as VERY LOW. This is an attention check.';
     } else {
         paragraph.innerText = 'How do you rate the similarity of these drawings? Use the scale below to respond.';
     };
