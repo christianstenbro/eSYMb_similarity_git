@@ -383,6 +383,9 @@ plot(att_check_subset$passed_checks,
      pch = 16,
      col = color_var,
      main = "Stim from study 3: \nAttention checks (n = 43)")
+abline(h = 4, lty = 3)
+
+table(att_check_subset$failed_checks > 1)
 ```
 
 ```{r}
