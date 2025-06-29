@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r load/install packages}
 pacman::p_load(tidyverse,
                rjson,
                rethinking,
@@ -18,22 +18,25 @@ pacman::p_load(tidyverse,
 
 # 1. Preprocessing
 
-## 1.1 Reading data and removing empty columns
+## 1.1 Reading data and removing empty columns / excluding participants with missing data
 
 ```{r}
 # reading pilot data
-data <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data_new_structure/SimilarityRatingExperiment_2025-06-26.csv")
+data <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data_29_06_2025/SimilarityRatingExperiment_2025-06-29.csv")
 ```
 ```{r}
 # loading otree page time data
-pagetimes <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data_new_structure/PageTimes-2025-06-26.csv")
+pagetimes <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data_29_06_2025/PageTimes-2025-06-29.csv")
 ```
 
 ```{r}
 # filtering out non-participant rows
 data <- data %>% filter(participant.label != "NA")
 pagetimes <- pagetimes %>% filter(participant_code != "NA")
+```
 
+
+```{r}
 # checking out the variable names
 cat("rating data columns:", "\n")
 colnames(data)
@@ -42,52 +45,64 @@ colnames(pagetimes)
 ```
 
 ```{r}
+# extract participant.id_in_session of participants who did not reach the goodbye page (page 37)
+incomplete_list <- data %>% filter(participant._index_in_pages != 37) %>% 
+  distinct(participant.id_in_session) %>% 
+  pull(participant.id_in_session)
+
+length(incomplete_list)
+
+# this list contains participant.id_in_session for participants who did not complete the study
+incomplete_list
+
+# exclude participants who did not complete the experiment missing data
+data <- data %>% filter(!participant.id_in_session %in% incomplete_list)
+```
+
+**The session IDs in the 'incomplete_list' are important, as the stim-set keys corresponding to these IDs will need to be re-rated**
+
+```{r}
 # making lists of participant codes/labels
 participant_label_list <- unique(data$participant.label)
+participant_id_in_session_list <- unique(data$participant.id_in_session)
 participant_code_list <- unique(data$participant.code)
 ```
 
+```{r}
+# visualising the ratio
+num_incomplete <- length(incomplete_list)
+num_complete <- length(participant_id_in_session_list)
+
+# Two values to compare
+values <- c(num_incomplete, num_complete)
+
+# Names for each bar
+names(values) <- c("Did not complete", "Completed")
+
+
+
+# Simple bar plot
+bar_positions <- barplot(values,
+        main = "Participant completion status (n = 50)",
+        sub = paste("Keys for sets that need new ratings:", paste(incomplete_list, collapse = ", ")),
+        col = c("skyblue", "orange"),
+        ylab = "Count",
+        ylim = c(0, max(values) * 1.2))
+text(x = bar_positions, 
+     y = values, 
+     labels = values, 
+     pos = 3,         
+     cex = 0.9,       
+     col = "black")
+```
+
 ## 1.2 Defining functions to extract variables from the rating data ('data' object)
-
-Turn this into a function:
-
-```{r}
-data$subsession.round_number
-
-round_vector <- rep(i, length(study_number))
-```
-
-```{r}
-round_number <- list()
-
-round_number <- append(round_number, rep(1, 20))
-
-unlist(round_number)
-
-length(df$sequential_ID)
-
-image_indices <- list()
-
-image_indices <- append(image_indices, list(fromJSON(data$player.imageIndices[i])))
-
-length(image_indices[[1]])
-
-
-
-round_number <- append(round_number, rep(1, length(image_indices[[1]])))
-
-length(unlist(round_number))
-length(unlist(image_indices))
-
-
-length(fromJSON(data$player.imageIndices[1]))
-```
-
 
 ```{r}
 organize_data <- function(ID_number) {
   
   ID <- participant_label_list[ID_number]
+  print(ID)
   
   subset <- data %>% filter(participant.label == ID)
   
@@ -255,10 +270,8 @@ time_spent_minutes <- time_spent_seconds / 60
 The final step is to stitch together a new grand data frame from the subsets created with the subset_with_attention_check_status() function:
 
 ```{r}
-subset_with_attention_check_status(1)
-
 # setting up constants
-participants <- c(1:10)
+participants <- c(1:length(participant_label_list))
 
 # setting up empty data frame
 df <- data_frame()
@@ -274,20 +287,18 @@ for (i in participants) {
 # adding attention check pass / fail status
 att_check_subset <- df %>% filter(is_attention_check == TRUE) %>% group_by(sequential_ID) %>% summarise(
     passed_checks = sum(attention_check_status_clean == TRUE, na.rm = TRUE),
-    failed_checks = sum(attention_check_status_clean == FALSE, na.rm = TRUE)
-  )
+    failed_checks = sum(attention_check_status_clean == FALSE, na.rm = TRUE))
 
 # merge this with the dataframe
 df <- merge(df, att_check_subset, by = 'sequential_ID', all.x = T)
 
-# checking out the combined data frame
-df
+att_check_subset
 ```
 
-
-
-
 ## 1.5 Extracting comments
+
+This should be appended to the data frame as well . . . 
+
 ```{r}
 data$player.technicalIssues
 data$player.dataValidity
@@ -355,16 +366,23 @@ visual_subset <- df
 ```
 
 ```{r}
-simplehist(visual_subset$image_ratings)
+hist(visual_subset$image_ratings, 
+     col = 1,
+     main = "Stim from study 3: \nDistribution of ratings for the entire sample (n = 43)",
+     xlab = "Rating")
+
 simplehist(visual_subset$rating_times)
 
 # plotting attention checks
+color_var <- ifelse(att_check_subset$failed_checks > 1, "red", "blue")
 
 plot(att_check_subset$passed_checks,
      xlab = "participant ID",
      ylab = "Passed attention checks",
      ylim = c(0,6),
-     main = "Passed attention checks x participant IDs")
+     pch = 16,
+     col = color_var,
+     main = "Stim from study 3: \nAttention checks (n = 43)")
 ```
 
 ```{r}
@@ -389,11 +407,14 @@ color_indices <- as.numeric(cut(z, breaks = n_colors, include.lowest = TRUE))
 point_colors_rt <- viridis(n_colors)[color_indices]
 
 # drawing plots for image ratings
+jitt = rnorm(n = length(visual_subset$image_ratings),
+             mean = 0, sd = 0.1)
+
 plot(x = visual_subset$image_indices,
-     y = visual_subset$image_ratings,
-     col = col.alpha(point_colors_r, 0.2),
+     y = visual_subset$image_ratings + jitt,
+     col = col.alpha(rangi2, 0.1),
      pch = 19,
-     main = "ratings x indices",
+     main = "Stim from study 3: \nratings x indices (n = 43, jittered)",
      xlab = "index", ylab = "similarity rating (numeric)")
 
 # adding stats
@@ -404,9 +425,9 @@ plot(x = visual_subset$image_indices,
      y = visual_subset$rating_times,
      col = visual_subset$round_number, 
      pch = 19,
-     main = "rating times x indices",
+     main = "Stim from study 3: \nRating times x Indices (n = 43, cut at 20 sec.)",
      xlab = "index", ylab = "rating time (mili seconds)",
-     ylim = c(0,40000)
+     ylim = c(0,200000)
      )
 
 ```
