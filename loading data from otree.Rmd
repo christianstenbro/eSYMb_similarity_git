@@ -23,8 +23,7 @@ pacman::p_load(tidyverse,
 ```{r}
 # reading pilot data
 data <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data_29_06_2025/SimilarityRatingExperiment_2025-06-29.csv")
-```
-```{r}
+
 # loading otree page time data
 pagetimes <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data_29_06_2025/PageTimes-2025-06-29.csv")
 ```
@@ -34,7 +33,6 @@ pagetimes <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pi
 data <- data %>% filter(participant.label != "NA")
 pagetimes <- pagetimes %>% filter(participant_code != "NA")
 ```
-
 
 ```{r}
 # checking out the variable names
@@ -118,6 +116,8 @@ organize_data <- function(ID_number) {
   file_names <- list()
   study_number <- list()
   round_number <- list()
+  participant_label <- list()
+  participant_code <- list()
   
   for (i in rounds) {
     image_indices <- append(image_indices, list(fromJSON(subset$player.imageIndices[i])))
@@ -132,6 +132,11 @@ organize_data <- function(ID_number) {
     set_size <- length(fromJSON(subset$player.imageIndices[i]))
     round_idx_vector <- rep(i, set_size)
     round_number <- append(round_number, round_idx_vector)
+    
+    # adding variables that should be repeated for all trials
+    participant_label <- append(participant_label, rep(participant_label_list[ID_number], set_size))
+    participant_code <- append(participant_code, rep(participant_code_list[ID_number], set_size))
+    
   }
   
   #unpacking lists
@@ -143,6 +148,8 @@ organize_data <- function(ID_number) {
   file_names <- unlist(file_names)
   study_number <- unlist(study_number)
   round_number <- unlist(round_number)
+  participant_label <- unlist(participant_label)
+  participant_code <- unlist(participant_code)
   #attention_check_status <- unlist(attention_check_status)
   
   # making a new data base for visualisation purposes
@@ -153,7 +160,9 @@ organize_data <- function(ID_number) {
                                 stim_indices,
                                 file_names,
                                 study_number,
-                                round_number)
+                                round_number,
+                                participant_label,
+                                participant_code)
                                 #attention_check_status)
   
   # making a single object containing the attention check status variable
@@ -184,88 +193,29 @@ subset_with_attention_check_status <- function(ID_number) {
   # cleaning the attention check pass fail variable to only contain TRUE / FALSE
   attention_check_status_clean <- grep("^(TRUE|FALSE)$", temp_data$attention_check_status, value = TRUE)
   
+  # extracting attention check type
+  attention_check_type <- grep("^(high|low)$", temp_data$attention_check_status, value = TRUE)
+  
+  # extracting full string
+  full_string <- temp_data$attention_check_status 
+  grouped <- split(full_string, ceiling(seq_along(full_string) / 3))
+  collapsed <- sapply(grouped, paste, collapse = " ")
+  attention_check_status_full_string <- unname(collapsed)
+  
   # combining into a new table alongside the att. check indices
-  attention_check_status_clean <- tibble(attention_check_status_clean, att_checks_indices)
+  attention_check_status_tibble <- tibble(attention_check_status_clean, 
+                                          attention_check_status_full_string, 
+                                          attention_check_type, 
+                                          att_checks_indices)
   
   # merging this with the organized data frame
-  subset_complete <- merge(temp_data$subset_unpacked, attention_check_status_clean, by.x = "image_indices", by.y = "att_checks_indices", all=T)
+  subset_complete <- merge(temp_data$subset_unpacked, attention_check_status_tibble, by.x = "image_indices", by.y = "att_checks_indices", all=T)
  
   return(subset_complete)
 }
 ```
 
-## 1.3 Defining functions to extract variables from the page time data ('pagetimes' object)
-
-We want to: 
-
-- Extract the page times for each rating round and break round, for each participant
-
-```{r}
-# grouping and ordering the rows by participant
-pagetimes <- pagetimes %>% group_by(participant_code) %>% arrange()
-
-# filtering out the irrelevant rounds
-pagetimes_filtered <- pagetimes %>% filter(page_name == "Rating_modification_round_structure" 
-                                           | page_name == "BreakPage" 
-                                           | page_name == "Instruction_5")
-
-# finding the participant codes that appear in both data frames
-match <- pagetimes_filtered$participant_code %in% data$participant.code 
-
-# filtering out rows in pagetimes object without a match in the rating data frame
-pagetimes_filtered <- pagetimes_filtered %>% 
-  filter(participant_code %in% data$participant.code) %>% 
-  group_by(participant_code) %>% 
-  arrange()
-
-# making sure all page times are recorded for all participants
-for (i in 1:length(unique(pagetimes_filtered$participant_code))) {
-  pagetime_temp <- pagetimes_filtered %>% filter(participant_code == participant_code_list[i])
-  if (length(pagetime_temp)<6) {
-    print("missing data")
-  } else { 
-    print("all good")
-    }
-}
-```
-
-We now want to change this to long format:
-
-```{r}
-pagetimes_filtered
-```
-
-```{r}
-participant_label_list <- unique(data$participant.label)
-participant_code_list <- unique(data$participant.code)
-
-subset_temp <- data %>% filter(participant.label == participant_list[1])
-
-subset_temp$participant.time_started_utc
-
-data$participant.code
-# computing total rating time
-pagetimes_temp <- pagetimes %>% filter(participant_code == participant_code_list[1])
-
-participant_code_list
-
-# making a row num. variable
-pagetimes_temp <- pagetimes_temp %>% mutate(row_num = 1:nrow(pagetimes_temp))
-
-# extracting rating page/break page rows
-pagetimes_temp <- pagetimes_temp[14:19,]
-
-pagetimes_temp$epoch_time_completed
-
-# computing the total time spent
-time_spent_seconds <- pagetimes_temp$epoch_time_completed[6]-pagetimes_temp$epoch_time_completed[1]
-
-time_spent_minutes <- time_spent_seconds / 60
-```
-
-
-
-## 1.4 Applying functions to create the 'grand data frame'
+## 1.3 Applying functions to create the 'grand data frame'
 
 The final step is to stitch together a new grand data frame from the subsets created with the subset_with_attention_check_status() function:
 
@@ -291,22 +241,119 @@ att_check_subset <- df %>% filter(is_attention_check == TRUE) %>% group_by(seque
 
 # merge this with the dataframe
 df <- merge(df, att_check_subset, by = 'sequential_ID', all.x = T)
-
-att_check_subset
 ```
 
-## 1.5 Extracting comments
-
-This should be appended to the data frame as well . . . 
+## 1.4 Extracting comments and merging with the data frame
 
 ```{r}
-data$player.technicalIssues
-data$player.dataValidity
+participant_label_list == df %>% distinct(participant_label)
+
+# extracting non-NA comments from participants who completed the study
+comment_subset <- data %>% filter(participant.label %in% participant_label_list) %>% 
+  select(participant.label, player.technicalIssues, player.dataValidity)
+
+comment_subset <- comment_subset %>% 
+  filter(!is.na(player.technicalIssues) | !is.na(player.dataValidity)) %>% 
+  rename("participant_label" = participant.label,
+         "com_tech_issues" = player.technicalIssues, 
+         "com_data_validity" = player.dataValidity)
+
+# merging with data frame by participant.label
+df <- merge(df, comment_subset, by = 'participant_label', all.x = T)
+
+# ordering the data frame
+df <- df %>% arrange(sequential_ID)
 ```
 
-## 1.6 Counting rounds
+## 1.5 Defining functions to extract variables from the page time data ('pagetimes' object)
 
-# 2. Statistics
+We want to: 
+
+- Extract the page times for each rating round and break round, for each participant
+- Extract the total time spent in the online experiment + the rating flow of the experiment (is somewhat redundant since we have similar information in the data from Prolific)
+- Append this information to the grand data frame
+
+```{r}
+# grouping and ordering the rows by participant
+pagetimes <- pagetimes %>% group_by(participant_code) %>% arrange()
+
+# making a copy of the data frame
+pagetimes_filtered <- pagetimes
+
+# finding the participant codes that appear in both data frames
+match <- pagetimes_filtered$participant_code %in% data$participant.code 
+
+# filtering out rows in pagetimes object without a match in the rating data frame
+pagetimes_filtered <- pagetimes_filtered %>% 
+  filter(participant_code %in% data$participant.code) %>% 
+  group_by(participant_code) %>% 
+  arrange(participant_code)
+
+# making sure all page times are recorded for all participants
+for (i in 1:length(unique(pagetimes_filtered$participant_code))) {
+  pagetime_temp <- pagetimes_filtered %>% filter(participant_code == participant_code_list[i])
+  if (length(pagetime_temp)<6) {
+    print("missing data")
+  } else { 
+    print("all good")
+    }
+}
+
+# changing to wide format
+pagetimes_filtered <- pagetimes_filtered %>% 
+  group_by() %>% 
+  pivot_wider(
+    id_cols = participant_code,
+    names_from = c(round_number, page_name),
+    values_from = epoch_time_completed,
+    names_glue = "{round_number}_{page_name}"
+)
+
+# computing total time spent + time in rating pages / break pages (by row subtraction)
+pagetimes_filtered <- pagetimes_filtered %>% 
+  mutate(total_experiment_timespan = 
+           (`5_FinalQuestions`-`1_InitializeParticipant`))
+
+pagetimes_filtered <- pagetimes_filtered %>% 
+  mutate(total_rating_flow_timespan = 
+           (`5_Rating_modification_round_structure`-`1_Instruction_5`))
+
+pagetimes_filtered <- pagetimes_filtered %>% 
+  mutate(total_break_time = 
+           ((`2_BreakPage`-`1_Rating_modification_round_structure`)+(`4_BreakPage`-`3_Rating_modification_round_structure`)))
+
+pagetimes_filtered <- pagetimes_filtered %>% 
+  mutate(total_rating_time = (total_rating_flow_timespan-total_break_time))
+
+# making a subset with the above columns + participant_code
+pagetimes_subset <- pagetimes_filtered %>% select(participant_code,
+                                                  total_experiment_timespan, 
+                                                  total_rating_flow_timespan,
+                                                  total_rating_time,
+                                                  total_break_time)
+
+# merging this subset with the grand data frame the
+df <- merge(df, pagetimes_subset, by = 'participant_code', all.x = T)
+df <- df %>% arrange(sequential_ID)
+```
+
+```{r}
+colnames(df)
+
+table(df$passed_checks)
+```
+
+## 1.6 Writing data
+
+```{r}
+file_name = "pre_processed_data_stim_study_3_43_participants"
+extension = ".csv"
+path = paste0("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/pre-processed_data_frames/", file_name, extension)
+
+write_csv(df, file = path)
+```
+
+# 2. Statistics (in-progress)
 
 ```{r}
 # grouping the data
@@ -358,7 +405,7 @@ The stats are appended to the data frame
 df <- merge(df, df_summary, by = "sequential_ID", all = T)
 ```
 
-# 3. Visualisation
+# 3. Visualisation (in-progress)
 
 ```{r}
 #visual_subset <- df %>% filter(failed_att_checks <= 2)
@@ -387,6 +434,46 @@ abline(h = 4, lty = 3)
 
 table(att_check_subset$failed_checks > 1)
 ```
+
+Plotting the total time spent in the experiment:
+
+```{r}
+
+row_pr_participant_subset <- visual_subset %>% group_by(participant_label) %>% slice_sample(n = 1)
+
+plot(
+  x = 1:nrow(row_pr_participant_subset),
+  y = row_pr_participant_subset$total_experiment_timespan,
+  type = "n",
+  ylim = range(c(0,max(row_pr_participant_subset$total_experiment_timespan))),
+  xlab = "Participant Index",
+  ylab = "Time (in seconds)",
+  main = "Stim from study 3: \nCompletion time overview (n = 43)"
+)
+
+abline(v = 1:nrow(row_pr_participant_subset), col = "lightgray", lty = "dotted")
+
+points(
+  x = 1:nrow(row_pr_participant_subset),
+  y = row_pr_participant_subset$total_experiment_timespan,
+  pch = 16, col = "blue"
+)
+
+points(
+  x = 1:nrow(row_pr_participant_subset),
+  y = row_pr_participant_subset$total_rating_time,
+  pch = 16, col = "green"
+)
+
+points(
+  x = 1:nrow(row_pr_participant_subset),
+  y = row_pr_participant_subset$total_break_time,
+  pch = 16, col = "orange"
+)
+
+legend("topleft", legend = c("Total time in experiment", "Rating time", "Break time"), col = c("blue", "green", "orange"), pch = 16, cex = 0.7)
+```
+
 
 ```{r}
 visual_subset$image_ratings <- as.numeric(visual_subset$image_ratings)
