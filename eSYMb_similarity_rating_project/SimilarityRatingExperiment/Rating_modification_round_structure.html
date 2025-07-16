@@ -187,24 +187,32 @@ const num_attention_checks_in_total = 6;
 
 let num_participants; //updates
 let num_total_drawings; //updates
+let missing_trials; // updates
+let new_participants; // updates
 
 switch (studyNumber) {
     case 1:
         num_participants = 30;
         num_total_drawings = 1584; 
+        missing_trials = 32;
+        new_participants = 8;
         break;
     case 2:
         num_participants = 30;
         num_total_drawings = 1452;
+        missing_trials = 18;
+        new_participants = 3;
         break;
     case 3:
         num_participants = 60;
         num_total_drawings = 4750;
+        missing_trials = 44;
+        new_participants = 21;
         break;
 };
 
 // computing number of drawings based on the above variables
-let stim_set_size = Math.ceil(num_total_drawings * ratings_pr_drawing / num_participants) + num_attention_checks_in_total;
+let stim_set_size = Math.ceil(num_total_drawings * ratings_pr_drawing / num_participants) + num_attention_checks_in_total + Math.ceil(missing_trials / new_participants);
 let drawingsPrRound = Math.ceil(stim_set_size / num_rounds);
 let attentionChecksInTotal = num_attention_checks_in_total;
 
