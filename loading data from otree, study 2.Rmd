@@ -13,7 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 pacman::p_load(tidyverse,
                rjson,
                rethinking,
-               viridis)
+               viridis,
+               here)
 ```
 
 # 1. Preprocessing
@@ -22,10 +23,10 @@ pacman::p_load(tidyverse,
 
 ```{r}
 # reading pilot data
-data <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data_29_06_2025/SimilarityRatingExperiment_2025-06-29.csv")
+data <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/data_from_one_drive/study 2/all_apps_wide-2025-06-30.csv")
 
 # loading otree page time data
-pagetimes <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data_29_06_2025/PageTimes-2025-06-29.csv")
+pagetimes <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/data_from_one_drive/study 2/PageTimes-2025-06-30.csv")
 ```
 
 ```{r}
@@ -34,13 +35,7 @@ data <- data %>% filter(participant.label != "NA")
 pagetimes <- pagetimes %>% filter(participant_code != "NA")
 ```
 
-```{r}
-# checking out the variable names
-cat("rating data columns:", "\n")
-colnames(data)
-cat("pagetime columns:","\n")
-colnames(pagetimes)
-```
+## 1.2 Removing data form participants who did not complete the experiment
 
 ```{r}
 # extract participant.id_in_session of participants who did not reach the goodbye page (page 37)
@@ -77,9 +72,11 @@ values <- c(num_incomplete, num_complete)
 # Names for each bar
 names(values) <- c("Did not complete", "Completed")
 
+
+
 # Simple bar plot
 bar_positions <- barplot(values,
-        main = "Participant completion status (n = 50)",
+        main = "Participant completion status \n(n = 30, stim from study 2)",
         sub = paste("Keys for sets that need new ratings:", paste(incomplete_list, collapse = ", ")),
         col = c("skyblue", "orange"),
         ylab = "Count",
@@ -92,7 +89,9 @@ text(x = bar_positions,
      col = "black")
 ```
 
-## 1.2 Defining functions to extract variables from the rating data ('data' object)
+## 1.3 Defining functions to extract variables from the rating data ('data' object)
+
+COMMENT: This function is modified to grab the data for rounds that are not a part of the introduction (which is a separate app) and to work with the wide format from Otree. This requires adding the prefix: *SimilarityRatingExperiment.{i}.player."* where *i* indicates the rating round number (1,3,5).
 
 ```{r}
 organize_data <- function(ID_number) {
@@ -116,24 +115,37 @@ organize_data <- function(ID_number) {
   round_number <- list()
   participant_label <- list()
   participant_code <- list()
+  id_in_session <- list()
   
   for (i in rounds) {
-    image_indices <- append(image_indices, list(fromJSON(subset$player.imageIndices[i])))
-    image_ratings <- append(image_ratings, list(fromJSON(subset$player.imageRatings[i])))
-    rating_times <- append(rating_times, list(fromJSON(subset$player.ratingTimes[i])))
-    is_attention_check <- append(is_attention_check, list(fromJSON(subset$player.isAttentionCheck[i])))
-    stim_indices <- append(stim_indices, list(fromJSON(subset$player.stimIndices[i])))
-    file_names <- append(file_names, list(fromJSON(subset$player.originalFileName[i])))
-    study_number <- append(study_number, list(fromJSON(subset$player.sessionStudyNumber[i])))
+    
+    # defining dynamic column names
+    image_ind_colname <- paste0("SimilarityRatingExperiment.", i, ".player.imageIndices")
+    image_rating_colname <- paste0("SimilarityRatingExperiment.", i, ".player.imageRatings")
+    rating_time_colname <- paste0("SimilarityRatingExperiment.", i, ".player.ratingTimes")
+    is_att_colname <- paste0("SimilarityRatingExperiment.", i, ".player.isAttentionCheck")
+    stim_ind_colname <- paste0("SimilarityRatingExperiment.", i, ".player.stimIndices")
+    file_name_colname <- paste0("SimilarityRatingExperiment.", i, ".player.originalFileName")
+    study_num_colname <- paste0("SimilarityRatingExperiment.", i, ".player.sessionStudyNumber")
+    
+    # extracting the JSON format information from each column 
+    image_indices <- append(image_indices, list(fromJSON(subset[[image_ind_colname]])))
+    image_ratings <- append(image_ratings, list(fromJSON(subset[[image_rating_colname]])))
+    rating_times <- append(rating_times, list(fromJSON(subset[[rating_time_colname]])))
+    is_attention_check <- append(is_attention_check, list(fromJSON(subset[[is_att_colname]])))
+    stim_indices <- append(stim_indices, list(fromJSON(subset[[stim_ind_colname]])))
+    file_names <- append(file_names, list(fromJSON(subset[[file_name_colname]])))
+    study_number <- append(study_number, list(fromJSON(subset[[study_num_colname]])))
     
     # adding round number
-    set_size <- length(fromJSON(subset$player.imageIndices[i]))
+    set_size <- length(fromJSON(subset[[image_ind_colname]]))
     round_idx_vector <- rep(i, set_size)
     round_number <- append(round_number, round_idx_vector)
     
     # adding variables that should be repeated for all trials
     participant_label <- append(participant_label, rep(participant_label_list[ID_number], set_size))
     participant_code <- append(participant_code, rep(participant_code_list[ID_number], set_size))
+    id_in_session <- append(id_in_session, rep(participant_id_in_session_list[ID_number], set_size))
     
   }
   
@@ -148,7 +160,7 @@ organize_data <- function(ID_number) {
   round_number <- unlist(round_number)
   participant_label <- unlist(participant_label)
   participant_code <- unlist(participant_code)
-  #attention_check_status <- unlist(attention_check_status)
+  id_in_session <- unlist(id_in_session)
   
   # making a new data base for visualisation purposes
   subset_unpacked <- data_frame(image_indices,
@@ -160,14 +172,19 @@ organize_data <- function(ID_number) {
                                 study_number,
                                 round_number,
                                 participant_label,
-                                participant_code)
-                                #attention_check_status)
+                                participant_code,
+                                id_in_session)
   
   # making a single object containing the attention check status variable
   attention_check_status <- list()
-  
+
   for (i in rounds) {
-    attention_check_status <- append(attention_check_status, list(fromJSON(subset$player.withinExpectedRatingRange[i])))
+    
+    # defining dynamic column name
+    within_exp_rating_colname <- paste0("SimilarityRatingExperiment.", i, ".player.withinExpectedRatingRange")
+    
+    # extracting JSON information
+    attention_check_status <- append(attention_check_status, list(fromJSON(subset[[within_exp_rating_colname]])))
   }
   
   attention_check_status <- unlist(unlist(attention_check_status))
@@ -213,9 +230,16 @@ subset_with_attention_check_status <- function(ID_number) {
 }
 ```
 
-## 1.3 Applying functions to create the 'grand data frame'
+## 1.4 Applying functions to create the 'grand data frame' and computing new attention check status
 
-The final step is to stitch together a new grand data frame from the subsets created with the subset_with_attention_check_status() function:
+The final step is to stitch together a new grand data frame from the subsets created with the subset_with_attention_check_status() function.
+
+Notice that the attention check pass/fail status is re-coded using the following scheme:
+
+    - If attention check type = low, ratings of 'very low' and 'low' will both be accepted as a pass
+    - If attention check type = high, only ratings of 'very high' is accepted as a pass
+    
+This information is stored in the new variable 'new_attention_check_status'.
 
 ```{r}
 # setting up constants
@@ -232,29 +256,40 @@ for (i in participants) {
   df <- rbind(df, temp_subset)
 }
 
+# computing new attention check status
+df <- df %>% 
+  mutate(new_attention_check_status = case_when(
+    is.na(attention_check_type) ~ NA_character_,
+    attention_check_type == 'low' & image_ratings <= 2 ~ 'passed',
+    attention_check_type == 'high' & image_ratings == 5 ~ 'passed',
+    TRUE ~ 'failed'))
+
 # adding attention check pass / fail status
 att_check_subset <- df %>% filter(is_attention_check == TRUE) %>% group_by(sequential_ID) %>% summarise(
-    passed_checks = sum(attention_check_status_clean == TRUE, na.rm = TRUE),
-    failed_checks = sum(attention_check_status_clean == FALSE, na.rm = TRUE))
+    passed_checks = sum(new_attention_check_status == 'passed', na.rm = TRUE),
+    failed_checks = sum(new_attention_check_status == 'failed', na.rm = TRUE))
 
 # merge this with the dataframe
 df <- merge(df, att_check_subset, by = 'sequential_ID', all.x = T)
+
+# assessing the data frame
+head(df)
 ```
 
-## 1.4 Extracting comments and merging with the data frame
+## 1.5 Extracting comments and merging with the data frame
 
 ```{r}
 participant_label_list == df %>% distinct(participant_label)
 
 # extracting non-NA comments from participants who completed the study
 comment_subset <- data %>% filter(participant.label %in% participant_label_list) %>% 
-  select(participant.label, player.technicalIssues, player.dataValidity)
+  select(participant.label, SimilarityRatingExperiment.1.player.technicalIssues, SimilarityRatingExperiment.1.player.dataValidity)
 
 comment_subset <- comment_subset %>% 
-  filter(!is.na(player.technicalIssues) | !is.na(player.dataValidity)) %>% 
+  filter(!is.na(SimilarityRatingExperiment.1.player.technicalIssues) | !is.na(SimilarityRatingExperiment.1.player.dataValidity)) %>% 
   rename("participant_label" = participant.label,
-         "com_tech_issues" = player.technicalIssues, 
-         "com_data_validity" = player.dataValidity)
+         "com_tech_issues" = SimilarityRatingExperiment.1.player.technicalIssues, 
+         "com_data_validity" = SimilarityRatingExperiment.1.player.dataValidity)
 
 # merging with data frame by participant.label
 df <- merge(df, comment_subset, by = 'participant_label', all.x = T)
@@ -263,7 +298,7 @@ df <- merge(df, comment_subset, by = 'participant_label', all.x = T)
 df <- df %>% arrange(sequential_ID)
 ```
 
-## 1.5 Defining functions to extract variables from the page time data ('pagetimes' object)
+## 1.6 Defining functions to extract variables from the page time data ('pagetimes' object)
 
 We want to: 
 
@@ -336,220 +371,20 @@ df <- df %>% arrange(sequential_ID)
 ```
 
 ```{r}
+# assessing the final data frame
 colnames(df)
-
-table(df$passed_checks)
+head(df)
+plot(table(df$passed_checks), 
+     main = "Distribution of passed attention checks",
+     ylab = "Passed checks")
 ```
 
-## 1.6 Writing data
+## 1.7 Writing data
 
 ```{r}
-file_name = "pre_processed_data_stim_study_3_43_participants"
+file_name = "pre_processed_data_stim_study_2_29_participants"
 extension = ".csv"
 path = paste0("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/pre-processed_data_frames/", file_name, extension)
 
 write_csv(df, file = path)
 ```
-
-# 2. Statistics (in-progress)
-
-```{r}
-# grouping the data
-df <- df %>% group_by(sequential_ID)
-
-# adding study number variable
-# df <- df %>% mutate(study_nymber = case_when((sequential_ID >= 1 & sequential_ID <= 4) ~ 1,
-#                                              (sequential_ID >= 5 & sequential_ID <= 7) ~ 2,
-#                                              (sequential_ID >= 8 & sequential_ID <= 10) ~ 3))
-
-# reformating data types
-df$image_ratings <- as.numeric(df$image_ratings)
-df$attention_check_status_clean <- as.logical(df$attention_check_status_clean)
-
-
-df_summary <- df %>% summarise('rt_median' = median(rating_times), 
-                 'rt_sd' = sd(rating_times),
-                 'rating_mean' = mean(image_ratings), 
-                 'rating_sd' = sd(image_ratings),
-                 'failed_att_checks' = sum(attention_check_status_clean == FALSE, na.rm = TRUE),
-                 'total_rating_time_ms' = sum(rating_times),
-                 'total_rating_time_min' = sum(rating_times)/1000/60)
-
-# print the entire stat summary
-df_summary
-
-# computing aggregated stats
-# mean of means study 3
-# round(mean(df_summary$rt_median[1:4]), 1)
-# round(mean(df_summary$rt_sd[1:4]), 1)
-# round(mean(df_summary$rating_mean[1:4]), 1)
-# round(mean(df_summary$rating_sd[1:4]), 1)
-# 
-# # mean of means study 2
-# round(mean(df_summary$rt_median[5:7]), 1)
-# round(mean(df_summary$rt_sd[5:7]), 1)
-# round(mean(df_summary$rating_mean[5:7]), 1)
-# round(mean(df_summary$rating_sd[5:7]), 1)
-# 
-# # mean of means study 1
-# round(mean(df_summary$rt_median[8:10]), 1)
-# round(mean(df_summary$rt_sd[8:10]), 1)
-# round(mean(df_summary$rating_mean[8:10]), 1)
-# round(mean(df_summary$rating_sd[8:10]), 1)
-```
-The stats are appended to the data frame
-
-```{r}
-df <- merge(df, df_summary, by = "sequential_ID", all = T)
-```
-
-# 3. Visualisation (in-progress)
-
-```{r}
-#visual_subset <- df %>% filter(failed_att_checks <= 2)
-visual_subset <- df
-```
-
-```{r}
-hist(visual_subset$image_ratings, 
-     col = 1,
-     main = "Stim from study 3: \nDistribution of ratings for the entire sample (n = 43)",
-     xlab = "Rating")
-
-simplehist(visual_subset$rating_times)
-
-# plotting attention checks
-color_var <- ifelse(att_check_subset$failed_checks > 1, "red", "blue")
-
-plot(att_check_subset$passed_checks,
-     xlab = "participant ID",
-     ylab = "Passed attention checks",
-     ylim = c(0,6),
-     pch = 16,
-     col = color_var,
-     main = "Stim from study 3: \nAttention checks (n = 43)")
-abline(h = 4, lty = 3)
-
-table(att_check_subset$failed_checks > 1)
-```
-
-Plotting the total time spent in the experiment:
-
-```{r}
-
-row_pr_participant_subset <- visual_subset %>% group_by(participant_label) %>% slice_sample(n = 1)
-
-plot(
-  x = 1:nrow(row_pr_participant_subset),
-  y = row_pr_participant_subset$total_experiment_timespan,
-  type = "n",
-  ylim = range(c(0,max(row_pr_participant_subset$total_experiment_timespan))),
-  xlab = "Participant Index",
-  ylab = "Time (in seconds)",
-  main = "Stim from study 3: \nCompletion time overview (n = 43)"
-)
-
-abline(v = 1:nrow(row_pr_participant_subset), col = "lightgray", lty = "dotted")
-
-points(
-  x = 1:nrow(row_pr_participant_subset),
-  y = row_pr_participant_subset$total_experiment_timespan,
-  pch = 16, col = "blue"
-)
-
-points(
-  x = 1:nrow(row_pr_participant_subset),
-  y = row_pr_participant_subset$total_rating_time,
-  pch = 16, col = "green"
-)
-
-points(
-  x = 1:nrow(row_pr_participant_subset),
-  y = row_pr_participant_subset$total_break_time,
-  pch = 16, col = "orange"
-)
-
-legend("topleft", legend = c("Total time in experiment", "Rating time", "Break time"), col = c("blue", "green", "orange"), pch = 16, cex = 0.7)
-```
-
-
-```{r}
-visual_subset$image_ratings <- as.numeric(visual_subset$image_ratings)
-```
-
-
-```{r}
-simplehist(visual_subset$image_ratings)
-
-# visualising the combined data frame
-# making color scale for ratings
-z <- as.numeric(visual_subset$image_ratings)
-n_colors <- 100
-color_indices <- as.numeric(cut(z, breaks = n_colors, include.lowest = TRUE))
-point_colors_r <- viridis(n_colors)[color_indices]
-
-# making color scale for rating times
-z <- visual_subset$rating_times
-n_colors <- 100
-color_indices <- as.numeric(cut(z, breaks = n_colors, include.lowest = TRUE))
-point_colors_rt <- viridis(n_colors)[color_indices]
-
-# drawing plots for image ratings
-jitt = rnorm(n = length(visual_subset$image_ratings),
-             mean = 0, sd = 0.1)
-
-plot(x = visual_subset$image_indices,
-     y = visual_subset$image_ratings + jitt,
-     col = col.alpha(rangi2, 0.1),
-     pch = 19,
-     main = "Stim from study 3: \nratings x indices (n = 43, jittered)",
-     xlab = "index", ylab = "similarity rating (numeric)")
-
-# adding stats
-#abline(h = df_summary$rating_mean, col = df_summary$sequential_ID)
-
-# drawing rating time plot
-plot(x = visual_subset$image_indices,
-     y = visual_subset$rating_times,
-     col = visual_subset$round_number, 
-     pch = 19,
-     main = "Stim from study 3: \nRating times x Indices (n = 43, cut at 20 sec.)",
-     xlab = "index", ylab = "rating time (mili seconds)",
-     ylim = c(0,200000)
-     )
-
-```
-
-```{r}
-# trying to visualize this stuff
-library(viridis)
-
-# making color scale for ratings
-z <- as.numeric(subset_unpacked$image_ratings)
-n_colors <- 100
-color_indices <- as.numeric(cut(z, breaks = n_colors, include.lowest = TRUE))
-point_colors_r <- viridis(n_colors)[color_indices]
-
-# making color scale for rating times
-z <- subset_unpacked$rating_times
-n_colors <- 100
-color_indices <- as.numeric(cut(z, breaks = n_colors, include.lowest = TRUE))
-point_colors_rt <- viridis(n_colors)[color_indices]
-
-# drawing plots
-plot(x = subset_unpacked$image_indices,
-     y = subset_unpacked$image_ratings,
-     col = point_colors_r,
-     pch = 19,
-     main = "ratings x indices",
-     xlab = "index", ylab = "similarity rating (numeric)")
-
-plot(x = subset_unpacked$image_indices,
-     y = subset_unpacked$rating_times,
-     col = point_colors_rt,
-     pch = 19,
-     main = "rating times x indices",
-     xlab = "index", ylab = "rating time (mili seconds)",
-     ylim = c(0,50000))
-```
-

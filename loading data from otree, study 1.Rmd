@@ -22,10 +22,10 @@ pacman::p_load(tidyverse,
 
 ```{r}
 # reading pilot data
-data <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data_29_06_2025/SimilarityRatingExperiment_2025-06-29.csv")
+data <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data_07_07_2025/SimilarityRatingExperiment_2025-07-07.csv")
 
 # loading otree page time data
-pagetimes <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data_29_06_2025/PageTimes-2025-06-29.csv")
+pagetimes <- read_csv("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/Pilot/otree_data_07_07_2025/PageTimes-2025-07-07.csv")
 ```
 
 ```{r}
@@ -77,9 +77,11 @@ values <- c(num_incomplete, num_complete)
 # Names for each bar
 names(values) <- c("Did not complete", "Completed")
 
+
+
 # Simple bar plot
 bar_positions <- barplot(values,
-        main = "Participant completion status (n = 50)",
+        main = "Participant completion status",
         sub = paste("Keys for sets that need new ratings:", paste(incomplete_list, collapse = ", ")),
         col = c("skyblue", "orange"),
         ylab = "Count",
@@ -344,7 +346,7 @@ table(df$passed_checks)
 ## 1.6 Writing data
 
 ```{r}
-file_name = "pre_processed_data_stim_study_3_43_participants"
+file_name = "pre_processed_data_stim_study_1_28_participants"
 extension = ".csv"
 path = paste0("/Users/christianstenbro/AU/eSYMb/Similarity Rating Exp/pre-processed_data_frames/", file_name, extension)
 
