@@ -1,0 +1,461 @@
+---
+title: "testing similarity data"
+author: "Christian Stenbro"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load/install packages}
+pacman::p_load(tidyverse,
+               rjson,
+               rethinking,
+               viridis,
+               here)
+```
+
+# 1. Processing
+
+## 1.1 Reading data and removing empty columns / excluding participants with missing data
+
+```{r}
+# reading data
+data <- read_csv(here("data", "study2", "raw_data", "all_apps_wide-2025-06-30.csv"))
+
+# loading otree page time data
+pagetimes <- read_csv(here("data", "study2", "raw_data", "PageTimes-2025-06-30.csv"))
+```
+
+```{r}
+# filtering out non-participant rows
+data <- data %>% filter(participant.label != "NA")
+pagetimes <- pagetimes %>% filter(participant_code != "NA")
+```
+
+```{r}
+# adding session indicator variables
+data <- data %>% mutate(session_date = "2025-06-30",
+                   session_code = "study_2_session_1")
+```
+
+COMMENT: For study 1 and 2, the JSON-key is similar to the the *id_in_session* variable.
+
+```{r}
+# adding JSON-key variable
+data <- data %>% mutate(JSON_key = participant.id_in_session)
+```
+
+## 1.2 Removing data from participants who did not complete the experiment
+
+```{r}
+# extract participant.id_in_session of participants who did not reach the goodbye page (page 37)
+incomplete_list <- data %>% filter(participant._index_in_pages != 37) %>% 
+  distinct(participant.id_in_session) %>% 
+  pull(participant.id_in_session)
+
+cat("Total participants who did not complete the study:", length(incomplete_list))
+
+# this list contains participant.id_in_session for participants who did not complete the study
+cat("\nid_in_session for incompleted sessions:", incomplete_list)
+
+# exclude participants who did not complete the experiment missing data
+data <- data %>% filter(!participant.id_in_session %in% incomplete_list)
+```
+
+**The session IDs in the 'incomplete_list' are important, as the stim-set keys corresponding to these IDs will need to be re-rated**
+
+## 1.3 Defining functions to extract variables from the rating data ('data' object)
+
+COMMENT: This function is modified to grab the data for rounds that are not a part of the introduction (which is a separate app) and to work with the wide format from Otree. This requires adding the prefix: *SimilarityRatingExperiment.{i}.player."* where *i* indicates the rating round number (1,3,5).
+
+```{r}
+# making lists of participant codes/labels
+participant_label_list <- unique(data$participant.label)
+participant_code_list <- unique(data$participant.code)
+```
+
+```{r}
+organize_data <- function(ID_number) {
+  
+  ID <- participant_label_list[ID_number]
+  print(ID)
+  
+  subset <- data %>% filter(participant.label == ID)
+  
+  # setting up constants
+  rounds <- c(1,3,5)
+  
+  # unpacking the JSON lists
+  image_indices <- list()
+  image_ratings <- list()
+  rating_times <- list()
+  is_attention_check <- list()
+  stim_indices <- list()
+  file_names <- list()
+  study_number <- list()
+  round_number <- list()
+  participant_label <- list()
+  participant_code <- list()
+  id_in_session <- list()
+  JSON_key <- list()
+  session_date <- list()
+  session_code <- list()
+  
+  for (i in rounds) {
+    
+    # defining dynamic column names
+    image_ind_colname <- paste0("SimilarityRatingExperiment.", i, ".player.imageIndices")
+    image_rating_colname <- paste0("SimilarityRatingExperiment.", i, ".player.imageRatings")
+    rating_time_colname <- paste0("SimilarityRatingExperiment.", i, ".player.ratingTimes")
+    is_att_colname <- paste0("SimilarityRatingExperiment.", i, ".player.isAttentionCheck")
+    stim_ind_colname <- paste0("SimilarityRatingExperiment.", i, ".player.stimIndices")
+    file_name_colname <- paste0("SimilarityRatingExperiment.", i, ".player.originalFileName")
+    study_num_colname <- paste0("SimilarityRatingExperiment.", i, ".player.sessionStudyNumber")
+    
+    # extracting the JSON format information from each column 
+    image_indices <- append(image_indices, list(fromJSON(subset[[image_ind_colname]])))
+    image_ratings <- append(image_ratings, list(fromJSON(subset[[image_rating_colname]])))
+    rating_times <- append(rating_times, list(fromJSON(subset[[rating_time_colname]])))
+    is_attention_check <- append(is_attention_check, list(fromJSON(subset[[is_att_colname]])))
+    stim_indices <- append(stim_indices, list(fromJSON(subset[[stim_ind_colname]])))
+    file_names <- append(file_names, list(fromJSON(subset[[file_name_colname]])))
+    study_number <- append(study_number, list(fromJSON(subset[[study_num_colname]])))
+    
+    # adding round number
+    set_size <- length(fromJSON(subset[[image_ind_colname]]))
+    round_idx_vector <- rep(i, set_size)
+    round_number <- append(round_number, round_idx_vector)
+    
+    # adding variables that should be repeated for all trials
+    participant_label <- append(participant_label, rep(participant_label_list[ID_number], set_size))
+    participant_code <- append(participant_code, rep(participant_code_list[ID_number], set_size))
+    
+    id <- unique(data$participant.id_in_session[data$participant.label == participant_label_list[ID_number]])
+    key <-  unique(data$JSON_key[data$participant.label == participant_label_list[ID_number]])
+    ses_date <- unique(data$session_date[data$participant.label == participant_label_list[ID_number]])
+    ses_code <- unique(data$session_code[data$participant.label == participant_label_list[ID_number]])
+    
+    id_in_session <- append(id_in_session, rep(id, set_size))
+    JSON_key <- append(JSON_key, rep(key, set_size))
+    session_date <- append(session_date, rep(ses_date, set_size))
+    session_code <- append(session_code, rep(ses_code, set_size))
+  }
+  
+  #unpacking lists
+  image_indices <- unlist(image_indices)
+  image_ratings <- unlist(image_ratings)
+  rating_times <- unlist(rating_times)
+  is_attention_check <- unlist(is_attention_check)
+  stim_indices <- unlist(stim_indices)
+  file_names <- unlist(file_names)
+  study_number <- unlist(study_number)
+  round_number <- unlist(round_number)
+  participant_label <- unlist(participant_label)
+  participant_code <- unlist(participant_code)
+  id_in_session <- unlist(id_in_session)
+  JSON_key <- unlist(JSON_key)
+  session_date <- unlist(session_date)
+  session_code <- unlist(session_code)
+  
+  # making a new data base for visualisation purposes
+  subset_unpacked <- data_frame(image_indices,
+                                image_ratings,
+                                rating_times,
+                                is_attention_check,
+                                stim_indices,
+                                file_names,
+                                study_number,
+                                round_number,
+                                participant_label,
+                                participant_code,
+                                id_in_session,
+                                JSON_key,
+                                session_date,
+                                session_code)
+  
+  # making a single object containing the attention check status variable
+  attention_check_status <- list()
+
+  for (i in rounds) {
+    
+    # defining dynamic column name
+    within_exp_rating_colname <- paste0("SimilarityRatingExperiment.", i, ".player.withinExpectedRatingRange")
+    
+    # extracting JSON information
+    attention_check_status <- append(attention_check_status, list(fromJSON(subset[[within_exp_rating_colname]])))
+  }
+  
+  attention_check_status <- unlist(unlist(attention_check_status))
+  
+  return(list(subset_unpacked = subset_unpacked, 
+              attention_check_status = attention_check_status)
+         )
+}
+```
+
+## 1.4 Applying functions to create the 'grand data frame' and computing new attention check status
+
+The final step is to stitch together a new grand data frame from the subsets created with the subset_with_attention_check_status() function.
+
+Notice that the attention check pass/fail status is re-coded using the following scheme:
+
+    - If attention check type = low, ratings of 'very low' and 'low' will both be accepted as a pass
+    - If attention check type = high, only ratings of 'very high' is accepted as a pass
+    
+This information is stored in the new variable 'new_attention_check_status'.
+
+```{r}
+# setting up constants
+participants <- c(1:length(participant_label_list))
+
+# setting up empty data frame
+df <- data_frame()
+
+# looping
+for (i in participants) {
+  temp_subset <- subset_with_attention_check_status(i)
+  sequential_ID <- rep(i, nrow(temp_subset))
+  temp_subset$sequential_ID <- sequential_ID
+  df <- rbind(df, temp_subset)
+}
+
+# computing new attention check status
+df <- df %>% 
+  mutate(new_attention_check_status = case_when(
+    is.na(attention_check_type) ~ NA_character_,
+    attention_check_type == 'low' & image_ratings <= 2 ~ 'passed',
+    attention_check_type == 'high' & image_ratings == 5 ~ 'passed',
+    TRUE ~ 'failed'))
+
+# adding attention check pass / fail status
+att_check_subset <- df %>% filter(is_attention_check == TRUE) %>% group_by(sequential_ID) %>% summarise(
+    passed_checks = sum(new_attention_check_status == 'passed', na.rm = TRUE),
+    failed_checks = sum(new_attention_check_status == 'failed', na.rm = TRUE))
+
+# merge this with the dataframe
+df <- merge(df, att_check_subset, by = 'sequential_ID', all.x = T)
+
+# assessing the data frame
+head(df)
+```
+
+## 1.5 Extracting comments and merging with the data frame
+
+```{r}
+participant_label_list == df %>% distinct(participant_label)
+
+# extracting non-NA comments from participants who completed the study
+comment_subset <- data %>% filter(participant.label %in% participant_label_list) %>% 
+  select(participant.label, SimilarityRatingExperiment.5.player.technicalIssues, SimilarityRatingExperiment.5.player.dataValidity)
+
+comment_subset <- comment_subset %>% 
+  filter(!is.na(SimilarityRatingExperiment.5.player.technicalIssues) | !is.na(SimilarityRatingExperiment.5.player.dataValidity)) %>% 
+  rename("participant_label" = participant.label,
+         "com_tech_issues" = SimilarityRatingExperiment.5.player.technicalIssues, 
+         "com_data_validity" = SimilarityRatingExperiment.5.player.dataValidity)
+
+# merging with data frame by participant.label
+df <- merge(df, comment_subset, by = 'participant_label', all.x = T)
+
+# ordering the data frame
+df <- df %>% arrange(sequential_ID)
+```
+
+## 1.6 Defining functions to extract variables from the page time data ('pagetimes' object)
+
+We want to: 
+
+- Extract the page times for each rating round and break round, for each participant
+- Extract the total time spent in the online experiment + the rating flow of the experiment (is somewhat redundant since we have similar information in the data from Prolific)
+- Append this information to the grand data frame
+
+```{r}
+# grouping and ordering the rows by participant
+pagetimes <- pagetimes %>% group_by(participant_code) %>% arrange()
+
+# making a copy of the data frame
+pagetimes_filtered <- pagetimes
+
+# finding the participant codes that appear in both data frames
+match <- pagetimes_filtered$participant_code %in% data$participant.code 
+
+# filtering out rows in pagetimes object without a match in the rating data frame
+pagetimes_filtered <- pagetimes_filtered %>% 
+  filter(participant_code %in% data$participant.code) %>% 
+  group_by(participant_code) %>% 
+  arrange(participant_code)
+
+# making sure all page times are recorded for all participants
+for (i in 1:length(unique(pagetimes_filtered$participant_code))) {
+  pagetime_temp <- pagetimes_filtered %>% filter(participant_code == participant_code_list[i])
+  if (length(pagetime_temp)<6) {
+    print("missing data")
+  } else { 
+    print("all good")
+    }
+}
+
+# changing to wide format
+pagetimes_filtered <- pagetimes_filtered %>% 
+  group_by() %>% 
+  pivot_wider(
+    id_cols = participant_code,
+    names_from = c(round_number, page_name),
+    values_from = epoch_time_completed,
+    names_glue = "{round_number}_{page_name}"
+)
+
+# computing total time spent + time in rating pages / break pages (by row subtraction)
+pagetimes_filtered <- pagetimes_filtered %>% 
+  mutate(total_experiment_timespan = 
+           (`5_FinalQuestions`-`1_InitializeParticipant`))
+
+pagetimes_filtered <- pagetimes_filtered %>% 
+  mutate(total_rating_flow_timespan = 
+           (`5_Rating_modification_round_structure`-`1_Instruction_5`))
+
+pagetimes_filtered <- pagetimes_filtered %>% 
+  mutate(total_break_time = 
+           ((`2_BreakPage`-`1_Rating_modification_round_structure`)+(`4_BreakPage`-`3_Rating_modification_round_structure`)))
+
+pagetimes_filtered <- pagetimes_filtered %>% 
+  mutate(total_rating_time = (total_rating_flow_timespan-total_break_time))
+
+# making a subset with the above columns + participant_code
+pagetimes_subset <- pagetimes_filtered %>% select(participant_code,
+                                                  total_experiment_timespan, 
+                                                  total_rating_flow_timespan,
+                                                  total_rating_time,
+                                                  total_break_time)
+
+# merging this subset with the grand data frame the
+df <- merge(df, pagetimes_subset, by = 'participant_code', all.x = T)
+df %>% arrange(sequential_ID, image_indices)
+```
+
+```{r}
+# assessing the final data frame
+colnames(df)
+head(df)
+plot(table(df$passed_checks), 
+     main = "Distribution of passed attention checks",
+     ylab = "Passed checks")
+```
+
+## 1.7 Writing data
+
+```{r}
+file_name = "processed_data_stim_study_2_29_participants"
+extension = ".csv"
+path = here("data", "study2", "processed_data", paste0(file_name, extension))
+
+if (!file.exists(path)) {
+  write_csv(df, file = path)
+} else {
+  message("File already exists. Skipping write.")
+}
+```
+
+# 2. Visualisations
+
+## 2.1 Plotting the total time spent in the experiment
+
+```{r}
+# making a new subset with a single row pr. participant
+row_pr_participant_subset <- df %>% group_by(participant_label) %>% slice_sample(n = 1)
+
+# extracting the study number and sample size
+study_num <- unique(row_pr_participant_subset$study_number)
+sample_size <- nrow(row_pr_participant_subset)
+
+# plotting different page time variables
+plot(
+  x = 1:nrow(row_pr_participant_subset),
+  y = row_pr_participant_subset$total_experiment_timespan,
+  type = "n",
+  ylim = range(c(0,max(row_pr_participant_subset$total_experiment_timespan))),
+  xlab = "Participant Index",
+  ylab = "Time (in seconds)",
+  main = paste0("Stim from study ",study_num,": \nCompletion time overview (n = ", sample_size, ")")
+)
+
+abline(v = 1:nrow(row_pr_participant_subset), col = "lightgray", lty = "dotted")
+
+points(
+  x = 1:nrow(row_pr_participant_subset),
+  y = row_pr_participant_subset$total_experiment_timespan,
+  pch = 16, col = "blue"
+)
+
+points(
+  x = 1:nrow(row_pr_participant_subset),
+  y = row_pr_participant_subset$total_rating_time,
+  pch = 16, col = "green"
+)
+
+points(
+  x = 1:nrow(row_pr_participant_subset),
+  y = row_pr_participant_subset$total_break_time,
+  pch = 16, col = "orange"
+)
+
+legend("topleft", legend = c("Total time in experiment", "Rating time", "Break time"), col = c("blue", "green", "orange"), pch = 16, cex = 0.7)
+
+```
+
+## 2.2 Plotting the completion ratio
+
+```{r}
+# visualising the ratio of participants who did and who did not complete the experiment
+num_incomplete <- length(incomplete_list)
+num_complete <- length(participant_label_list)
+num_total <- num_incomplete + num_complete
+
+# storing the two values to compare
+values <- c(num_incomplete, num_complete)
+
+# creating names for each bar
+names(values) <- c("Did not complete", "Completed")
+
+# simple bar plot
+bar_positions <- barplot(values,
+        main = paste0("Participant completion status \n(n = ", num_total,", stim from study ", study_num, ")"),
+        sub = paste("Keys for sets that need new ratings:", paste(incomplete_list, collapse = ", ")),
+        col = c("skyblue", "orange"),
+        ylab = "Count",
+        ylim = c(0, max(values) * 1.2))
+text(x = bar_positions, 
+     y = values, 
+     labels = values, 
+     pos = 3,         
+     cex = 0.9,       
+     col = "black")
+```
+
+## 2.3 Plotting passed/failed attention checks
+
+```{r}
+# plotting attention checks
+color_var <- ifelse(att_check_subset$failed_checks > 1, "red", "blue")
+
+plot(att_check_subset$passed_checks,
+     xlab = "participant ID",
+     ylab = "Passed attention checks",
+     ylim = c(0,6),
+     pch = 16,
+     col = color_var,
+     main = paste0("Stim from study ", study_num, ": \nAttention checks (n = ", sample_size, ")")
+     )
+abline(h = 4, lty = 3)
+
+table(att_check_subset$failed_checks > 1)
+```
+
+## 2.4 Plotting the id_in_sessions
+
+```{r}
+plot(sort(row_pr_participant_subset$id_in_session))
+```
